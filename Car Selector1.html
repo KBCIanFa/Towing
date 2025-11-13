@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Australian Car Selector — Live Feed + Filters</title>
+  <meta name="description" content="Find cars that match your needs — multi-filter UI with live data from free APIs (vPIC + Wikipedia), built for GitHub Pages." />
+  <style>
+    :root { --bg:#fff; --fg:#111827; --muted:#6b7280; --brand:#4f46e5; --surface:#f8fafc; --radius:18px; --shadow:0 12px 24px rgba(0,0,0,.06),0 3px 8px rgba(0,0,0,.05); --control:#f3f4f6; --border:#e5e7eb; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Ubuntu,Cantarell,Arial}
+    header,footer{padding:1rem 0;background:#fff;border-bottom:1px solid var(--border)}
+    .container{width:min(1160px,100% - 2rem);margin:auto}
+    .title{margin:0 0 .25rem;font-size:1.35rem;font-weight:700}
+    .sub{margin:0;color:var(--muted)}
+    .card-wrap{background:#fff;border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:1rem;margin:1.25rem 0}
+    @media (min-width:720px){.card-wrap{padding:1.25rem}}
+    .grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:1rem}
+    .col-4,.col-6{grid-column:span 12}
+    @media (min-width:860px){.col-4{grid-column:span 4}.col-6{grid-column:span 6}}
+    .field{display:flex;flex-direction:column;gap:.35rem}
+    .label{font-size:.9rem;color:#4b5563}
+    .control{appearance:none;width:100%;background:var(--control);border:1px solid var(--border);border-radius:12px;padding:.8rem .9rem;font-size:1rem;color:#111827}
+    .control::placeholder{color:#9ca3af}
+    .readonly{background:#f9fafb;color:#6b7280}
+    select.control{background-image:linear-gradient(45deg,transparent 50%,#9ca3af 50%),linear-gradient(135deg,#9ca3af 50%,transparent 50%);background-position:calc(100% - 18px) calc(50% - 5px),calc(100% - 12px) calc(50% - 5px);background-size:6px 6px,6px 6px;background-repeat:no-repeat}
+    .actions{grid-column:span 12;display:flex;justify-content:center;gap:1rem;padding-top:.5rem}
+    .btn{background:#eef2ff;color:#111827;border:1px solid var(--border);padding:.8rem 1.4rem;border-radius:12px;font-weight:600;cursor:pointer}
+    .btn.primary{background:var(--brand);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(79,70,229,.25)}
+    .btn:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(79,70,229,.35)}
+    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin:1rem 0 1rem}
+    .card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:1rem;box-shadow:var(--shadow)}
+    .badge{display:inline-block;padding:.2rem .6rem;border:1px solid var(--border);border-radius:999px;font-size:.8rem;color:#374151}
+    .hint{font-size:.85rem;color:#6b7280;margin:.25rem 0 0}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .hidden{display:none}
+    .center{text-align:center}
+  </style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <h1 class="title">Car Selector</h1>
+    <p class="sub">Find your perfect match — from city EVs to heavy‑duty utes.</p>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card-wrap" aria-labelledby="filters-title">
+    <h2 id="filters-title" class="sr-only">Filters</h2>
+    <form id="searchForm" class="grid12" autocomplete="off">
+      <div class="field col-6">
+        <label class="label" for="makeInput">Prefer a make?</label>
+        <input id="makeInput" class="control" placeholder="e.g., Toyota, Ford, Hyundai — leave blank for many makes" />
+      </div>
+      <div class="field col-6">
+        <label class="label" for="budget">Max Budget (AUD)</label>
+        <input id="budget" class="control" type="number" inputmode="numeric" placeholder="e.g., 60000" min="0" />
+      </div>
+
+      <div class="field col-4">
+        <label class="label" for="useCase">Primary Use Case</label>
+        <select id="useCase" class="control">
+          <option>Any</option>
+          <option>City / Commute</option>
+          <option>Family</option>
+          <option>Towing / Touring</option>
+          <option>Tradie / Work Ute</option>
+          <option>Off‑road / 4×4</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="bodyStyle">Body Style</label>
+        <select id="bodyStyle" class="control">
+          <option>Any</option>
+          <option>Hatch</option>
+          <option>Sedan</option>
+          <option>SUV</option>
+          <option>Ute</option>
+          <option>Van</option>
+          <option>Wagon</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="drivetrain">Drivetrain</label>
+        <select id="drivetrain" class="control">
+          <option>Any</option>
+          <option>FWD</option>
+          <option>RWD</option>
+          <option>AWD</option>
+          <option>4WD</option>
+        </select>
+      </div>
+
+      <div class="field col-4">
+        <label class="label" for="minSeats">Minimum Seats</label>
+        <select id="minSeats" class="control">
+          <option selected>2+</option>
+          <option>4+</option>
+          <option>5+</option>
+          <option>7+</option>
+          <option>8+</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="minCyl">Min. Cylinders</label>
+        <select id="minCyl" class="control">
+          <option>Any</option>
+          <option>3</option>
+          <option>4</option>
+          <option>6</option>
+          <option>8</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="minTowing">Min. Towing (kg)</label>
+        <select id="minTowing" class="control">
+          <option>Any</option>
+          <option>750</option>
+          <option>1200</option>
+          <option>1500</option>
+          <option>2500</option>
+          <option>3500</option>
+          <option>4500</option>
+        </select>
+      </div>
+
+      <div class="field col-4">
+        <label class="label" for="ancap">ANCAP Rating</label>
+        <select id="ancap" class="control">
+          <option>Any</option>
+          <option>3+</option>
+          <option>4+</option>
+          <option>5</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="maxL100">Max. Fuel Consumption (L/100km)</label>
+        <select id="maxL100" class="control">
+          <option>Any</option>
+          <option>10</option>
+          <option>8</option>
+          <option>6</option>
+          <option>4</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="fuel">Primary Fuel</label>
+        <select id="fuel" class="control">
+          <option>Any</option>
+          <option>Petrol</option>
+          <option>Diesel</option>
+          <option>EV</option>
+          <option>Hybrid</option>
+          <option>PHEV</option>
+        </select>
+      </div>
+
+      <div class="field col-4">
+        <label class="label" for="ePower">Electric Powertrain</label>
+        <select id="ePower" class="control">
+          <option>Any</option>
+          <option>BEV</option>
+          <option>HEV</option>
+          <option>PHEV</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn" type="button" id="resetBtn">Reset</button>
+        <button class="btn primary" type="submit">Find My Car</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Caravan / Trailer specs -->
+  <section id="caravanSection" class="card-wrap hidden" aria-labelledby="caravan-title">
+    <h3 id="caravan-title" style="margin:.25rem 0 1rem;font-size:1.1rem;">Caravan / Trailer specifications</h3>
+    <form id="caravanForm" class="grid12">
+      <div class="field col-4">
+        <label class="label" for="trailerType">Trailer Type</label>
+        <select id="trailerType" class="control">
+          <option>Caravan</option>
+          <option>Camper Trailer</option>
+          <option>Box / Utility</option>
+          <option>Boat Trailer</option>
+          <option>Horse Float</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="tare">Tare (kg)</label>
+        <input id="tare" class="control" type="number" inputmode="numeric" placeholder="e.g., 2200" min="0" />
+      </div>
+      <div class="field col-4">
+        <label class="label" for="atm">ATM — Aggregate Trailer Mass (kg)</label>
+        <input id="atm" class="control" type="number" inputmode="numeric" placeholder="e.g., 3500" min="0" />
+      </div>
+      <div class="field col-4">
+        <label class="label" for="gtm">GTM — Gross Trailer Mass (kg)</label>
+        <input id="gtm" class="control" type="number" inputmode="numeric" placeholder="e.g., 3200" min="0" />
+        <p class="hint">Typically GTM ≈ ATM − ball weight</p>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="ball">Ball Weight at ATM (kg)</label>
+        <input id="ball" class="control" type="number" inputmode="numeric" placeholder="e.g., 300" min="0" />
+      </div>
+      <div class="field col-4">
+        <label class="label" for="payload">Payload (kg)</label>
+        <input id="payload" class="control readonly" type="number" placeholder="auto" readonly />
+        <p class="hint">Payload = ATM − Tare</p>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="brakes">Brakes</label>
+        <select id="brakes" class="control">
+          <option>Electric</option>
+          <option>Overrun</option>
+          <option>None</option>
+        </select>
+      </div>
+      <div class="field col-4">
+        <label class="label" for="axles">Axles</label>
+        <select id="axles" class="control">
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+        </select>
+      </div>
+
+      <div class="field col-6">
+        <label class="label" for="tvMake">Preferred tow vehicle make</label>
+        <input id="tvMake" class="control" placeholder="e.g., Ford" />
+      </div>
+      <div class="field col-6">
+        <label class="label" for="tvModel">Preferred tow vehicle model</label>
+        <select id="tvModel" class="control">
+          <option value="">Select model (after choosing make)</option>
+        </select>
+      </div>
+      <div class="field col-6">
+        <button type="button" id="checkTow" class="btn primary">Check this combo</button>
+        <div id="comboMsg" class="hint"></div>
+      </div>
+    </form>
+  </section>
+
+  <section aria-live="polite" aria-busy="false">
+    <div id="count" class="center" style="color:#6b7280;font-size:.95rem;margin-bottom:.25rem;"></div>
+    <div id="results" class="results"></div>
+    <div class="center" style="margin:1rem 0 2.5rem;">
+      <button id="loadMore" class="btn hidden">Load more</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">© <span id="year"></span> Car Selector · Built for Australians</div>
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const els = {
+    year: $('year'),
+    form: $('searchForm'),
+    caravanForm: $('caravanForm'),
+    caravanSection: $('caravanSection'),
+    useCase: $('useCase'),
+    reset: $('resetBtn'),
+    count: $('count'),
+    results: $('results'),
+    loadMore: $('loadMore'),
+    tare: $('tare'),
+    atm: $('atm'),
+    payload: $('payload'),
+    checkTow: $('checkTow'),
+    comboMsg: $('comboMsg'),
+    tvMake: $('tvMake'),
+    tvModel: $('tvModel')
+  };
+
+  els.year.textContent = new Date().getFullYear();
+
+  const localVehicles = [
+    { make:'Tesla', model:'Model 3', price:64000, body:'Sedan', drivetrain:'RWD', seats:5, cylinders:0, fuel:'EV', ePower:'BEV', towing:0, ancap:5, l100:null, useCase:'City / Commute', payload:400 },
+    { make:'BYD', model:'Atto 3', price:48000, body:'SUV', drivetrain:'FWD', seats:5, cylinders:0, fuel:'EV', ePower:'BEV', towing:750, ancap:5, l100:null, useCase:'Family', payload:430 },
+    { make:'Mitsubishi', model:'Outlander PHEV', price:62000, body:'SUV', drivetrain:'AWD', seats:5, cylinders:4, fuel:'PHEV', ePower:'PHEV', towing:1600, ancap:5, l100:1.5, useCase:'Family', payload:500 },
+
+    // Toyota — proper heavy tow rigs so ATM 3500 finds something sensible
+    { make:'Toyota', model:'RAV4 Hybrid', price:47000, body:'SUV', drivetrain:'AWD', seats:5, cylinders:4, fuel:'Hybrid', ePower:'HEV', towing:1500, ancap:5, l100:4.7, useCase:'Family', payload:500 },
+    { make:'Toyota', model:'Hilux SR5 2.8', price:72000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:4, fuel:'Diesel', ePower:null, towing:3500, ballLimit:350, ancap:5, l100:8.0, useCase:'Towing / Touring', payload:1000 },
+    { make:'Toyota', model:'LandCruiser 300 Series', price:115000, body:'SUV', drivetrain:'4WD', seats:7, cylinders:6, fuel:'Diesel', ePower:null, towing:3500, ballLimit:350, ancap:5, l100:8.9, useCase:'Towing / Touring', payload:650 },
+    { make:'Toyota', model:'LandCruiser 79 Dual Cab', price:95000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:8, fuel:'Diesel', ePower:null, towing:3500, ballLimit:350, ancap:5, l100:10.7, useCase:'Towing / Touring', payload:1000 },
+
+    // Ford & friends
+    { make:'Ford', model:'Ranger V6', price:72000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:6, fuel:'Diesel', ePower:null, towing:3500, ballLimit:350, ancap:5, l100:8.4, useCase:'Towing / Touring', payload:900 },
+    { make:'Ford', model:'F-150 Lariat', price:115000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:6, fuel:'Petrol', ePower:null, towing:4500, ballLimit:350, ancap:5, l100:12.0, useCase:'Towing / Touring', payload:830 },
+
+    { make:'Isuzu', model:'D-MAX', price:61000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:4, fuel:'Diesel', ePower:null, towing:3500, ballLimit:350, ancap:5, l100:8.0, useCase:'Tradie / Work Ute', payload:1000 },
+
+    // RAM & Chevrolet US-style utes
+    { make:'RAM', model:'1500 Laramie', price:120000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:8, fuel:'Petrol', ePower:null, towing:4500, ballLimit:350, ancap:5, l100:13.5, useCase:'Towing / Touring', payload:830 },
+    { make:'RAM', model:'2500 Heavy Duty', price:145000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:6, fuel:'Diesel', ePower:null, towing:4500, ballLimit:400, ancap:5, l100:14.5, useCase:'Towing / Touring', payload:1500 },
+    { make:'Chevrolet', model:'Silverado 2500', price:140000, body:'Ute', drivetrain:'4WD', seats:5, cylinders:8, fuel:'Diesel', ePower:null, towing:4500, ballLimit:420, ancap:5, l100:12.0, useCase:'Towing / Touring', payload:1600 },
+
+    { make:'Hyundai', model:'i30', price:28000, body:'Hatch', drivetrain:'FWD', seats:5, cylinders:4, fuel:'Petrol', ePower:null, towing:600, ancap:5, l100:7.1, useCase:'City / Commute', payload:450 }
+  ];
+
+  const PAGE = 24;
+  const SEED_MAKES = ['Toyota','Ford','Hyundai','Kia','Mitsubishi','Isuzu','Mazda','Nissan','RAM','Chevrolet','Volkswagen','Subaru'];
+  const TOW_MARGIN = 200; // kg margin where we allow near-limit but warn
+
+  let lastList = [];
+  let rendered = 0;
+  let towCandidates = [];
+
+  // --- UI wiring ---------------------------------------------------------
+
+  els.reset.addEventListener('click', () => {
+    els.form.reset();
+    els.caravanForm.reset();
+    toggleCaravan(false);
+    render([]);
+    els.comboMsg.innerHTML = '';
+  });
+
+  els.useCase.addEventListener('change', () => {
+    toggleCaravan(els.useCase.value === 'Towing / Touring');
+  });
+
+  function toggleCaravan(show) {
+    els.caravanSection.classList.toggle('hidden', !show);
+  }
+
+  function updatePayload() {
+    const tare = Number(els.tare.value) || 0;
+    const atm = Number(els.atm.value) || 0;
+    els.payload.value = atm && tare ? Math.max(atm - tare, 0) : '';
+  }
+
+  els.tare.addEventListener('input', updatePayload);
+  els.atm.addEventListener('input', updatePayload);
+
+  // Build tow-vehicle list when a brand is entered in the caravan module
+  els.tvMake.addEventListener('change', buildTowList);
+  els.tvMake.addEventListener('blur', buildTowList);
+
+  async function buildTowList() {
+    const brand = (els.tvMake.value || '').trim();
+    els.tvModel.innerHTML = '<option value="">Select model</option>';
+    towCandidates = [];
+
+    if (!brand) return;
+
+    const atm = Number(els.atm.value) || 0;
+    if (!atm) {
+      els.tvModel.innerHTML = '<option value="">Enter caravan ATM first</option>';
+      return;
+    }
+
+    const q = { make: brand, caravan: { atm } };
+
+    try {
+      const extra = await fetchVPIC(q);
+      const merged = mergeUnique(localVehicles, extra);
+      const pool = merged.filter(v => {
+        const towCap = v.towing || 0;
+        return (
+          v.make.toLowerCase().includes(brand.toLowerCase()) &&
+          towCap > 0 &&
+          towCap >= atm - TOW_MARGIN
+        );
+      });
+
+      if (!pool.length) {
+        els.tvModel.innerHTML = '<option value="">No suitable tow models found for this brand</option>';
+        return;
+      }
+
+      const sorted = pool.sort((a, b) => (b.towing || 0) - (a.towing || 0));
+
+      towCandidates = sorted;
+      lastList = mergeUnique(lastList, pool);
+
+      els.tvModel.innerHTML =
+        '<option value="">Select model</option>' +
+        sorted
+          .map(v => `<option value="${v.model}">${v.model}${v.towing ? ` (${v.towing}kg tow)` : ''}</option>`)
+          .join('');
+    } catch (e) {
+      els.tvModel.innerHTML = '<option value="">Error loading models for this brand</option>';
+    }
+  }
+
+  // --- Search form ------------------------------------------------------
+
+  els.form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const q = getFilters();
+
+    const scored = localVehicles
+      .map(v => ({ v, score: scoreVehicle(v, q) }))
+      .filter(x => x.score > 0 && hardPass(x.v, q))
+      .sort((a, b) => b.score - a.score)
+      .map(x => x.v);
+
+    const extra = await fetchVPIC(q);
+    render(mergeUnique(scored, extra), true);
+  });
+
+  els.loadMore.addEventListener('click', () => {
+    render(lastList, false);
+  });
+
+  // --- Combo checker ----------------------------------------------------
+
+  els.checkTow.addEventListener('click', () => {
+    const q = getFilters();
+    const c = q.caravan;
+    els.comboMsg.innerHTML = '';
+
+    if (!c || !c.atm) {
+      els.comboMsg.textContent = 'Enter at least ATM to check a combo.';
+      return;
+    }
+
+    const mk = (c.preferredMake || '').toLowerCase();
+    const md = (c.preferredModel || '').toLowerCase();
+
+    if (!mk || !md) {
+      els.comboMsg.textContent = 'Enter a tow vehicle make and model.';
+      return;
+    }
+
+    // Prefer models from the tow-candidate list used for the dropdown
+    let v = towCandidates.find(x =>
+      x.make.toLowerCase().includes(mk) && x.model.toLowerCase() === md
+    );
+
+    if (!v) {
+      const pool = mergeUnique(localVehicles, lastList);
+      v = pool.find(x =>
+        x.make.toLowerCase().includes(mk) && x.model.toLowerCase() === md
+      );
+    }
+
+    if (!v) {
+      els.comboMsg.textContent = 'No matching tow vehicle found in current data.';
+      return;
+    }
+
+    const rows = [];
+    const towCap = v.towing || 0;
+    const ballCap = v.ballLimit || null;
+
+    if (c.atm) {
+      let status = 'Check data';
+      if (towCap) {
+        if (towCap >= c.atm) status = 'OK';
+        else if (towCap >= c.atm - TOW_MARGIN) status = 'Near limit';
+        else status = 'Over';
+      }
+      rows.push({
+        label: 'ATM vs tow rating',
+        trailer: `${c.atm} kg`,
+        vehicle: towCap ? `${towCap} kg` : 'Unknown',
+        status
+      });
+    }
+
+    if (c.ball) {
+      rows.push({
+        label: 'Ball weight vs TBM',
+        trailer: `${c.ball} kg`,
+        vehicle: ballCap ? `${ballCap} kg` : 'Unknown',
+        status: ballCap ? (ballCap >= c.ball ? 'OK' : 'Over') : 'Check data'
+      });
+    }
+
+    const towMargin = towCap && c.atm ? towCap - c.atm : null;
+    const ballMargin = ballCap && c.ball ? ballCap - c.ball : null;
+    const payloadCap = v.payload || null;
+    const payloadAfter = payloadCap && c.ball ? payloadCap - c.ball : null;
+
+    // Add explicit payload rows so the user can see real numbers, not just margins
+    if (payloadCap && c.ball) {
+      rows.push({
+        label: 'Vehicle payload (approx)',
+        trailer: '—',
+        vehicle: `${payloadCap} kg`,
+        status: 'Info'
+      });
+
+      rows.push({
+        label: 'Payload remaining after TBM',
+        trailer: `${c.ball} kg TBM`,
+        vehicle: `${payloadAfter >= 0 ? payloadAfter : '-' + Math.abs(payloadAfter)} kg`,
+        status: payloadAfter >= 0 ? 'OK' : 'Over'
+      });
+    }
+
+    const marginBits = [];
+    if (towMargin !== null) {
+      marginBits.push(`${Math.abs(towMargin)} kg ${towMargin >= 0 ? 'tow margin remaining' : 'over tow rating'}`);
+    }
+    if (ballMargin !== null) {
+      marginBits.push(`${Math.abs(ballMargin)} kg ${ballMargin >= 0 ? 'TBM margin remaining' : 'over TBM limit'}`);
+    }
+    if (payloadAfter !== null) {
+      marginBits.push(`${Math.abs(payloadAfter)} kg ${payloadAfter >= 0 ? 'vehicle payload remaining after TBM' : 'over vehicle payload after TBM'}`);
+    }
+    const marginLine = marginBits.length
+      ? `<p class="hint" style="margin-top:.2rem;">Based on entered figures: ${marginBits.join(' · ')}.</p>`
+      : '';
+
+    const anyOver = rows.some(r => r.status === 'Over');
+    const anyNear = rows.some(r => r.status === 'Near limit');
+
+    let colour, bg, title;
+    if (anyOver) {
+      colour = '#dc2626';
+      bg = '#fef2f2';
+      title = '⚠ Possible overweight combination on known figures';
+    } else if (anyNear) {
+      colour = '#f97316';
+      bg = '#fffbeb';
+      title = '⚠ Very small tow margin — check your figures carefully';
+    } else {
+      colour = '#22c55e';
+      bg = '#ecfdf3';
+      title = '✓ Tow combination looks within limits on known figures';
+    }
+
+    const tableRows = rows
+      .map(
+        r => `
+      <tr>
+        <td style="padding:2px 4px;">${r.label}</td>
+        <td style="padding:2px 4px;">${r.trailer}</td>
+        <td style="padding:2px 4px;">${r.vehicle}</td>
+        <td style="padding:2px 4px;">${r.status}</td>
+      </tr>`
+      )
+      .join('');
+
+    els.comboMsg.innerHTML = `
+      <div style="border-radius:12px;border:1px solid ${colour};background:${bg};padding:.75rem .9rem;">
+        <strong style="display:block;margin-bottom:.35rem;">${v.make} ${v.model}</strong>
+        <span style="display:block;margin-bottom:.25rem;">${title}</span>
+        <table style="width:100%;border-collapse:collapse;font-size:.86rem;margin-bottom:.25rem;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:2px 4px;">Check</th>
+              <th style="text-align:left;padding:2px 4px;">Trailer</th>
+              <th style="text-align:left;padding:2px 4px;">Vehicle</th>
+              <th style="text-align:left;padding:2px 4px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        ${marginLine}
+        <p class="hint" style="margin-top:.2rem;">Always confirm against placards, handbook and current regulations.</p>
+      </div>`;
+  });
+
+  // --- Helpers ----------------------------------------------------------
+
+  function getFilters() {
+    const val = id => $(id).value;
+    const seatsMap = { '2+': 2, '4+': 4, '5+': 5, '7+': 7, '8+': 8 };
+    const caravanVisible = !els.caravanSection.classList.contains('hidden');
+    const num = id => {
+      const x = val(id);
+      return x ? Number(x) : null;
+    };
+
+    const caravan = caravanVisible
+      ? {
+          type: val('trailerType'),
+          tare: num('tare'),
+          atm: num('atm'),
+          gtm: num('gtm'),
+          ball: num('ball'),
+          brakes: val('brakes'),
+          axles: num('axles'),
+          preferredMake: val('tvMake').trim(),
+          preferredModel: val('tvModel').trim()
+        }
+      : null;
+
+    return {
+      make: val('makeInput').trim(),
+      useCase: val('useCase'),
+      body: val('bodyStyle'),
+      drivetrain: val('drivetrain'),
+      minSeats: seatsMap[val('minSeats')] || 2,
+      minCyl:
+        val('minCyl') === 'Any'
+          ? null
+          : Number(val('minCyl') || 0) || null,
+      minTowing:
+        val('minTowing') === 'Any'
+          ? null
+          : Number(val('minTowing') || 0) || null,
+      ancap:
+        val('ancap') === 'Any'
+          ? null
+          : Number(val('ancap').replace('+', '')) || null,
+      maxL100:
+        val('maxL100') === 'Any'
+          ? null
+          : Number(val('maxL100') || 0) || null,
+      fuel: val('fuel'),
+      ePower: val('ePower'),
+      budget: $('budget').value ? Number($('budget').value) : null,
+      caravan
+    };
+  }
+
+  function scoreVehicle(v, q) {
+    let s = 0;
+    if (!q.useCase || q.useCase === 'Any' || v.useCase === q.useCase) s += 2;
+    if (q.body === 'Any' || v.body.toLowerCase() === q.body.toLowerCase()) s += 2;
+    if (q.drivetrain === 'Any' || v.drivetrain === q.drivetrain) s += 1;
+    if (!q.minSeats || v.seats >= q.minSeats) s += 2;
+    if (!q.minCyl || (v.cylinders || 0) >= q.minCyl) s += 1;
+    if (!q.minTowing || (v.towing || 0) >= q.minTowing) s += 2;
+    if (!q.ancap || (v.ancap || 0) >= q.ancap) s += 1;
+    if (!q.maxL100 || v.l100 == null || v.l100 <= q.maxL100) s += 1;
+    if (q.fuel === 'Any' || v.fuel === q.fuel) s += 1;
+    if (q.ePower === 'Any' || (v.ePower || '') === q.ePower) s += 1;
+    if (!q.budget || (v.price || 9e9) <= q.budget) s += 1;
+    return s;
+  }
+
+  function hardPass(v, q) {
+    if (q.minSeats && v.seats && v.seats < q.minSeats) return false;
+
+    if (q.caravan) {
+      const towCap = v.towing || 0;
+      if (q.caravan.atm && towCap && towCap < q.caravan.atm - TOW_MARGIN) return false;
+      if (q.caravan.ball && v.ballLimit && v.ballLimit < q.caravan.ball) return false;
+    } else if (q.minTowing && (v.towing || 0) < q.minTowing) {
+      return false;
+    }
+
+    return true;
+  }
+
+  async function fetchVPIC(q) {
+    const makes = q.make ? [q.make] : SEED_MAKES;
+    const year = 2018;
+    const all = [];
+
+    for (const mk of makes) {
+      try {
+        const res = await fetch(
+          `https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformakeyear/make/${encodeURIComponent(
+            mk
+          )}/modelyear/${year}?format=json`
+        );
+        const models = (await res.json()).Results || [];
+        for (const m of models) {
+          const g = guessFromName(m.Model_Name, mk);
+          const v = {
+            make: mk,
+            model: m.Model_Name,
+            price: null,
+            body: g.body,
+            drivetrain: g.drive,
+            seats: g.seats,
+            cylinders: g.cyl,
+            fuel: g.fuel,
+            ePower: g.ePower,
+            towing: g.tow,
+            ancap: null,
+            l100: null,
+            useCase: g.useCase
+          };
+          if (hardPass(v, q)) all.push({ v, score: scoreVehicle(v, q) });
+        }
+      } catch (e) {
+        // ignore fetch errors for now
+      }
+    }
+
+    return all
+      .sort((a, b) => b.score - a.score)
+      .map(x => x.v);
+  }
+
+  function guessFromName(name = '', make = '') {
+    const n = (make + ' ' + name).toLowerCase();
+    const ute = /(silverado|ram|f[- ]?150|ranger|hilux|d-?max|tundra|tacoma|pickup|ute)/.test(n);
+    const suv = /(suv|xtrail|rav4|cx-[0-9]|outlander|palisade|seltos|sportage|everest|prado|landcruiser|gladiator|forester|outback)/.test(n);
+    const van = /(van|hiace|transit|express|sprinter)/.test(n);
+    const sedan = /(sedan|accord|camry|model 3|i30 sedan|mazda 3|civic)/.test(n);
+    const hatch = /(hatch|yaris|polo|i30|mazda 2|fiesta|golf)/.test(n) && !sedan;
+
+    const body = ute ? 'Ute' : suv ? 'SUV' : van ? 'Van' : sedan ? 'Sedan' : hatch ? 'Hatch' : 'SUV';
+
+    const fuel = /(ev|electric|model 3|model y|leaf|kona electric|id\.|bz4x|atto|seal)/.test(n)
+      ? 'EV'
+      : /(hybrid|hev|phev)/.test(n)
+      ? 'Hybrid'
+      : 'Petrol';
+
+    const ePower =
+      fuel === 'EV'
+        ? 'BEV'
+        : /phev/.test(n)
+        ? 'PHEV'
+        : /hybrid|hev/.test(n)
+        ? 'HEV'
+        : null;
+
+    const seats = ute ? 5 : van ? 2 : 5;
+    const drive = ute ? '4WD' : suv ? 'AWD' : 'FWD';
+    const tow = ute ? 3500 : suv ? 1500 : 600;
+    const cyl = fuel === 'EV' ? 0 : ute ? 6 : 4;
+    const useCase = ute ? 'Towing / Touring' : suv ? 'Family' : 'City / Commute';
+
+    return { body, fuel, ePower, seats, drive, tow, cyl, useCase };
+  }
+
+  function mergeUnique(a, b) {
+    const key = v => `${v.make}|${v.model}|${v.body}`;
+    const map = new Map(a.map(v => [key(v), v]));
+    b.forEach(v => {
+      if (!map.has(key(v))) map.set(key(v), v);
+    });
+    return [...map.values()];
+  }
+
+  function render(list, reset = false) {
+    lastList = list;
+    if (reset) {
+      rendered = 0;
+      els.results.innerHTML = '';
+    }
+
+    const total = lastList.length;
+    els.count.textContent = total
+      ? `${total} result${total === 1 ? '' : 's'} — best matches first`
+      : '';
+
+    if (!total) {
+      els.results.innerHTML =
+        '<p class="badge">No matches yet — set your filters then hit <strong>Find My Car</strong>.</p>';
+      els.loadMore.classList.add('hidden');
+      return;
+    }
+
+    const next = lastList.slice(rendered, rendered + PAGE);
+    els.results.insertAdjacentHTML('beforeend', next.map(cardHTML).join(''));
+    rendered += next.length;
+    els.loadMore.classList.toggle('hidden', rendered >= total);
+  }
+
+  function cardHTML(v) {
+    const price = v.price
+      ? new Intl.NumberFormat('en-AU', {
+          style: 'currency',
+          currency: 'AUD',
+          maximumFractionDigits: 0
+        }).format(v.price)
+      : 'POA';
+
+    const chips = [
+      v.body,
+      v.drivetrain,
+      `${v.seats} seats`,
+      v.towing ? `${v.towing}kg tow` : null,
+      v.ballLimit ? `TBM ${v.ballLimit}kg` : null,
+      v.ancap ? `${v.ancap}★ ANCAP` : null,
+      v.l100 ? `${v.l100} L/100` : v.fuel === 'EV' ? 'EV efficiency' : ''
+    ]
+      .filter(Boolean)
+      .map(t => `<span class="badge">${t}</span>`)
+      .join(' ');
+
+    const wiki = `https://en.wikipedia.org/wiki/${encodeURIComponent(
+      v.make + ' ' + v.model
+    )}`;
+
+    return `
+      <article class="card" aria-label="${v.make} ${v.model}">
+        <h3 style="margin:.25rem 0 0">${v.make} ${v.model}</h3>
+        <p style="margin:.25rem 0 .5rem;color:#4b5563;">${price} · ${v.fuel}${
+      v.ePower ? ` (${v.ePower})` : ''
+    }</p>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;">${chips}</div>
+        <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+          <a class="btn" href="${wiki}" target="_blank" rel="noopener">Wiki</a>
+          <a class="btn" href="https://www.google.com/search?q=${encodeURIComponent(
+            v.make + ' ' + v.model + ' Australia reviews'
+          )}" target="_blank" rel="noopener">AU reviews</a>
+          <a class="btn" href="https://www.carsales.com.au/cars/${encodeURIComponent(
+            v.make + ' ' + v.model
+          )}/" target="_blank" rel="noopener">Listings</a>
+        </div>
+      </article>`;
+  }
+
+  // Initial empty state
+  render([]);
+})();
+</script>
+</body>
+</html>
