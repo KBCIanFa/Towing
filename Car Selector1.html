@@ -31,6 +31,9 @@
     .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin:1rem 0 1rem}
     .card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:1rem;box-shadow:var(--shadow)}
     .badge{display:inline-block;padding:.2rem .6rem;border:1px solid var(--border);border-radius:999px;font-size:.8rem;color:#374151}
+    .fuel-group{display:flex;flex-wrap:wrap;gap:.4rem}
+    .fuel-chip{display:inline-flex;align-items:center;gap:.3rem;background:var(--control);border-radius:999px;padding:.25rem .7rem;font-size:.85rem;border:1px solid var(--border);cursor:pointer}
+    .fuel-chip input{margin:0}
     .hint{font-size:.85rem;color:#6b7280;margin:.25rem 0 0}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     .hidden{display:none}
@@ -145,15 +148,16 @@
         </select>
       </div>
       <div class="field col-4">
-        <label class="label" for="fuel">Primary Fuel</label>
-        <select id="fuel" class="control">
-          <option>Any</option>
-          <option>Petrol</option>
-          <option>Diesel</option>
-          <option>EV</option>
-          <option>Hybrid</option>
-          <option>PHEV</option>
-        </select>
+        <label class="label">Primary Fuel</label>
+        <div class="fuel-group" id="fuelGroup">
+          <label class="fuel-chip"><input type="checkbox" class="fuel-check" value="Petrol" />Petrol</label>
+          <label class="fuel-chip"><input type="checkbox" class="fuel-check" value="Diesel" />Diesel</label>
+          <label class="fuel-chip"><input type="checkbox" class="fuel-check" value="EV" />EV</label>
+          <label class="fuel-chip"><input type="checkbox" class="fuel-check" value="Hybrid" />Hybrid</label>
+          <label class="fuel-chip"><input type="checkbox" class="fuel-check" value="PHEV" />PHEV</label>
+        </div>
+        <p class="hint">Select one or more fuels; leave all unticked for any fuel.</p>
+      </div>
       </div>
 
       <div class="field col-4">
@@ -305,8 +309,24 @@
     { make:'Hyundai', model:'i30', price:28000, body:'Hatch', drivetrain:'FWD', seats:5, cylinders:4, fuel:'Petrol', ePower:null, towing:600, ancap:5, l100:7.1, useCase:'City / Commute', payload:450 }
   ];
 
-  const PAGE = 24;
-  const SEED_MAKES = ['Toyota','Ford','Hyundai','Kia','Mitsubishi','Isuzu','Mazda','Nissan','RAM','Chevrolet','Volkswagen','Subaru'];
+  const PAGE = 10;
+  // Australian-market brands only for the live feed
+  const AU_MAKES = ['Toyota','Ford','Hyundai','Kia','Mitsubishi','Isuzu','Mazda','Nissan','RAM','Chevrolet','Volkswagen','Subaru'];
+  // Whitelist of real / common AU-market models for vPIC feed
+  const AU_VPIC_WHITELIST = {
+    RAM: [/1500/i, /2500/i, /3500/i, /Laramie/i, /Limited/i, /Express/i, /Warlock/i, /Big Horn/i],
+    Chevrolet: [/Silverado/i],
+    Ford: [/Ranger/i, /Everest/i, /F-150/i],
+    Toyota: [/Hilux/i, /Land ?Cruiser/i, /Prado/i, /RAV4/i],
+    Isuzu: [/D-?MAX/i],
+    Mitsubishi: [/Outlander/i, /Triton/i],
+    Nissan: [/Navara/i, /X-?TRAIL/i, /Patrol/i],
+    Mazda: [/BT-50/i, /CX-[0-9]+/i, /Mazda 3/i],
+    Hyundai: [/i30/i, /Kona/i, /Tucson/i],
+    Kia: [/Sportage/i, /Seltos/i, /Sorento/i],
+    Volkswagen: [/Amarok/i, /Golf/i, /Tiguan/i],
+    Subaru: [/Forester/i, /Outback/i]
+  };
   const TOW_MARGIN = 200; // kg margin where we allow near-limit but warn
 
   let lastList = [];
@@ -568,6 +588,7 @@
     const val = id => $(id).value;
     const seatsMap = { '2+': 2, '4+': 4, '5+': 5, '7+': 7, '8+': 8 };
     const caravanVisible = !els.caravanSection.classList.contains('hidden');
+    const fuels = Array.from(document.querySelectorAll('.fuel-check:checked')).map(cb => cb.value);
     const num = id => {
       const x = val(id);
       return x ? Number(x) : null;
@@ -609,7 +630,7 @@
         val('maxL100') === 'Any'
           ? null
           : Number(val('maxL100') || 0) || null,
-      fuel: val('fuel'),
+      fuels,
       ePower: val('ePower'),
       budget: $('budget').value ? Number($('budget').value) : null,
       caravan
@@ -626,7 +647,7 @@
     if (!q.minTowing || (v.towing || 0) >= q.minTowing) s += 2;
     if (!q.ancap || (v.ancap || 0) >= q.ancap) s += 1;
     if (!q.maxL100 || v.l100 == null || v.l100 <= q.maxL100) s += 1;
-    if (q.fuel === 'Any' || v.fuel === q.fuel) s += 1;
+    if (!q.fuels || q.fuels.length === 0 || q.fuels.includes(v.fuel)) s += 1;
     if (q.ePower === 'Any' || (v.ePower || '') === q.ePower) s += 1;
     if (!q.budget || (v.price || 9e9) <= q.budget) s += 1;
     return s;
@@ -644,12 +665,17 @@
       return false;
     }
 
-    if (q.fuel && q.fuel !== 'Any' && v.fuel && v.fuel !== q.fuel) {
-      return false;
+    if (q.fuels && q.fuels.length) {
+      const vf = (v.fuel || '').toLowerCase();
+      if (!vf) return false;
+      const allowed = q.fuels.map(f => f.toLowerCase());
+      if (!allowed.includes(vf)) return false;
     }
 
-    if (q.ePower && q.ePower !== 'Any' && (v.ePower || '') !== q.ePower) {
-      return false;
+    if (q.ePower && q.ePower !== 'Any') {
+      const ve = (v.ePower || '').toLowerCase();
+      const qe = q.ePower.toLowerCase();
+      if (!ve || ve !== qe) return false;
     }
 
     if (q.ancap && (v.ancap || 0) < q.ancap) {
@@ -678,7 +704,21 @@
   }
 
   async function fetchVPIC(q) {
-    const makes = q.make ? [q.make] : SEED_MAKES;
+    const auMakes = AU_MAKES;
+    const lower = auMakes.map(m => m.toLowerCase());
+    let makes;
+
+    if (q.make && q.make.trim()) {
+      const mk = q.make.trim();
+      if (!lower.includes(mk.toLowerCase())) {
+        // Non‑Australian brand: skip external feed so results stay AU‑market only
+        return [];
+      }
+      makes = [mk];
+    } else {
+      makes = auMakes;
+    }
+
     const year = 2018;
     const all = [];
 
@@ -691,6 +731,10 @@
         );
         const models = (await res.json()).Results || [];
         for (const m of models) {
+          const allowedPatterns = AU_VPIC_WHITELIST[mk];
+          // Hard block vPIC entries that don't look like real AU-market models
+          if (!allowedPatterns) continue; // no whitelist for this make
+          if (!allowedPatterns.some(rx => rx.test(m.Model_Name))) continue;
           const g = guessFromName(m.Model_Name, mk);
           const v = {
             make: mk,
@@ -849,7 +893,7 @@
       minTowing: null,
       ancap: null,
       maxL100: null,
-      fuel: 'Any',
+      fuels: [],
       ePower: 'Any',
       budget: null,
       caravan: null
@@ -861,9 +905,13 @@
     assert('Body = Ute returns only utes', uteList.length > 0 && uteList.every(v => v.body === 'Ute'));
 
     // Fuel should be a hard filter
-    const evQuery = { ...base, fuel: 'EV' };
+    const evQuery = { ...base, fuels: ['EV'] };
     const evList = localVehicles.filter(v => hardPass(v, evQuery));
     assert('Fuel = EV returns only EVs', evList.length > 0 && evList.every(v => v.fuel === 'EV'));
+
+    const dieselQuery = { ...base, fuels: ['Diesel'] };
+    const dieselList = localVehicles.filter(v => hardPass(v, dieselQuery));
+    assert('Fuel = Diesel returns only Diesels', dieselList.length > 0 && dieselList.every(v => v.fuel === 'Diesel'));
 
     // Budget should exclude cars above the limit
     const budgetQuery = { ...base, budget: 50000 };
