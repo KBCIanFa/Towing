@@ -633,8 +633,39 @@
   }
 
   function hardPass(v, q) {
+    // Hard filters — if these fail, vehicle is excluded entirely
     if (q.minSeats && v.seats && v.seats < q.minSeats) return false;
 
+    if (q.body && q.body !== 'Any' && v.body && v.body.toLowerCase() !== q.body.toLowerCase()) {
+      return false;
+    }
+
+    if (q.drivetrain && q.drivetrain !== 'Any' && v.drivetrain && v.drivetrain !== q.drivetrain) {
+      return false;
+    }
+
+    if (q.fuel && q.fuel !== 'Any' && v.fuel && v.fuel !== q.fuel) {
+      return false;
+    }
+
+    if (q.ePower && q.ePower !== 'Any' && (v.ePower || '') !== q.ePower) {
+      return false;
+    }
+
+    if (q.ancap && (v.ancap || 0) < q.ancap) {
+      // Treat unknown ANCAP as 0 so it gets filtered out when user asks for a minimum
+      return false;
+    }
+
+    if (q.maxL100 && v.l100 != null && v.l100 > q.maxL100) {
+      return false;
+    }
+
+    if (q.budget && v.price && v.price > q.budget) {
+      return false;
+    }
+
+    // Towing-related hard rules
     if (q.caravan) {
       const towCap = v.towing || 0;
       if (q.caravan.atm && towCap && towCap < q.caravan.atm - TOW_MARGIN) return false;
@@ -801,8 +832,50 @@
       </article>`;
   }
 
+  // Simple dev/unit tests for filter behaviour (runs in console only)
+  function runFilterTests() {
+    const tests = [];
+    const assert = (name, condition) => {
+      tests.push({ name, passed: !!condition });
+    };
+
+    const base = {
+      make: '',
+      useCase: 'Any',
+      body: 'Any',
+      drivetrain: 'Any',
+      minSeats: 2,
+      minCyl: null,
+      minTowing: null,
+      ancap: null,
+      maxL100: null,
+      fuel: 'Any',
+      ePower: 'Any',
+      budget: null,
+      caravan: null
+    };
+
+    // Body style should be a hard filter
+    const uteQuery = { ...base, body: 'Ute' };
+    const uteList = localVehicles.filter(v => hardPass(v, uteQuery));
+    assert('Body = Ute returns only utes', uteList.length > 0 && uteList.every(v => v.body === 'Ute'));
+
+    // Fuel should be a hard filter
+    const evQuery = { ...base, fuel: 'EV' };
+    const evList = localVehicles.filter(v => hardPass(v, evQuery));
+    assert('Fuel = EV returns only EVs', evList.length > 0 && evList.every(v => v.fuel === 'EV'));
+
+    // Budget should exclude cars above the limit
+    const budgetQuery = { ...base, budget: 50000 };
+    const budgetList = localVehicles.filter(v => hardPass(v, budgetQuery));
+    assert('Budget = 50k excludes >50k cars', budgetList.every(v => !v.price || v.price <= 50000));
+
+    console.log('Car Selector filter tests:', tests);
+  }
+
   // Initial empty state
   render([]);
+  runFilterTests();
 })();
 </script>
 </body>
