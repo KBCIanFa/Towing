@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Grumpy Old Man Course</title>
+    <style>
+        :root {
+            --bg: #f7f7f7;
+            --card: #ffffff;
+            --border: #d0d0d0;
+            --text: #111111;
+            --muted: #555555;
+            --accent: #c75b39;
+            --accent-soft: #ffe1d6;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(247, 247, 247, 0.97);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 0.2rem;
+            gap: 1rem;
+        }
+        .logo {
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+        .logo span {
+            color: var(--accent);
+        }
+        nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        nav button {
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #fff;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+        nav button:hover {
+            border-color: var(--accent);
+        }
+        main {
+            padding: 1.5rem 0 3rem;
+        }
+        section {
+            margin-bottom: 2rem;
+        }
+        section h2 {
+            font-size: 1.4rem;
+            margin: 0 0 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .badge {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+        .lead {
+            margin: 0 0 1.5rem;
+            color: var(--muted);
+            max-width: 650px;
+        }
+        .hero-card {
+            background: var(--card);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            padding: 1.2rem 1.3rem;
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+            gap: 1.5rem;
+        }
+        @media (max-width: 800px) {
+            .hero-card {
+                grid-template-columns: 1fr;
+            }
+        }
+        .hero-title {
+            font-size: 1.7rem;
+            margin: 0 0 0.4rem;
+        }
+        .hero-tagline {
+            margin: 0 0 0.8rem;
+            color: var(--muted);
+        }
+        .hero-list {
+            margin: 0;
+            padding-left: 1.1rem;
+            font-size: 0.95rem;
+        }
+        .hero-list li {
+            margin-bottom: 0.25rem;
+        }
+        .hero-aside {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 0.8rem;
+        }
+        .progress-wrap {
+            font-size: 0.85rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 0.6rem;
+            background: #e4e4e4;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 0.35rem;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #c75b39, #e08f3b);
+            transition: width 0.3s ease;
+        }
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1rem;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 0.9rem;
+            border: 1px solid var(--border);
+            padding: 0.9rem 0.95rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .card h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+        .card p {
+            margin: 0;
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+        .skills {
+            margin: 0.2rem 0 0.3rem;
+            padding-left: 1rem;
+            font-size: 0.85rem;
+        }
+        .skills li {
+            margin-bottom: 0.1rem;
+        }
+        .quote {
+            font-size: 0.82rem;
+            padding: 0.4rem 0.55rem;
+            border-left: 3px solid var(--accent);
+            background: #fafafa;
+            border-radius: 0.4rem;
+        }
+        .topic-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+            font-size: 0.8rem;
+        }
+        .topic-footer label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+        }
+        .chip {
+            border-radius: 999px;
+            background: #f0f0f0;
+            padding: 0.1rem 0.55rem;
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        textarea,
+        select,
+        input[type="text"] {
+            width: 100%;
+            padding: 0.45rem 0.55rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            font: inherit;
+        }
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+        .primary {
+            background: var(--accent);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.45rem 0.9rem;
+            border: none;
+            font: inherit;
+            cursor: pointer;
+        }
+        .primary:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        .primary:hover:not(:disabled) {
+            filter: brightness(1.05);
+        }
+        .small-label {
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            color: var(--muted);
+        }
+        .chat-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            gap: 1rem;
+        }
+        @media (max-width: 900px) {
+            .chat-shell {
+                grid-template-columns: 1fr;
+            }
+        }
+        .chat-window {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .chat-log {
+            background: var(--card);
+            border-radius: 0.9rem;
+            border: 1px solid var(--border);
+            padding: 0.65rem;
+            max-height: 260px;
+            overflow-y: auto;
+            font-size: 0.86rem;
+        }
+        .msg {
+            margin-bottom: 0.45rem;
+        }
+        .msg-label {
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+        .msg.user .msg-label {
+            color: #004b8f;
+        }
+        .msg.bot .msg-label {
+            color: #7b321a;
+        }
+        .msg-bubble {
+            margin-top: 0.1rem;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+        .chat-input-row input[type="text"] {
+            flex: 1;
+        }
+        .pill-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 0.4rem;
+        }
+        .pill-buttons button {
+            border-radius: 999px;
+            padding: 0.25rem 0.6rem;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+        .pill-buttons button:hover {
+            border-color: var(--accent);
+        }
+        .chat-side-card {
+            background: var(--card);
+            border-radius: 0.9rem;
+            border: 1px solid var(--border);
+            padding: 0.8rem 0.9rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 1rem 0;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+        .disclaimer {
+            margin-top: 0.3rem;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <div class="header-inner" aria-label="Page header">
+            <div class="logo">The <span>Grumpy Old Man</span> Course</div>
+            <nav aria-label="Section navigation">
+                <button data-scroll="course">Course</button>
+                <button data-scroll="tools">Grump Tools</button>
+                <button data-scroll="ai">Cheeky AI</button>
+                <button data-scroll="certificate">Certificate</button>
+                <button data-scroll="about">About</button>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <!-- Hero -->
+    <section aria-labelledby="hero-heading">
+        <div class="hero-card">
+            <div>
+                <h1 id="hero-heading" class="hero-title">Welcome to Your Grumpy Old Man Apprenticeship</h1>
+                <p class="hero-tagline">
+                    Learn the ancient Aussie art of having a good whinge about everything &mdash; without being a complete muppet about it.
+                </p>
+                <ul class="hero-list">
+                    <li>Core topics in everyday grumpiness.</li>
+                    <li>Cheeky AI sidekick to sharpen your rants.</li>
+                    <li>Local progress tracking &mdash; no logins, no fuss.</li>
+                </ul>
+            </div>
+            <aside class="hero-aside" aria-label="Progress overview">
+                <div class="stat-pill">
+                    <strong id="completed-count">0</strong> of <span id="total-count">0</span> topics mastered &middot;
+                    <span id="progress-emoji">😐</span> Grump status
+                </div>
+                <div class="progress-wrap">
+                    <div>Grump Certification Progress</div>
+                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div class="progress-bar-inner" id="progress-bar-inner"></div>
+                    </div>
+                </div>
+                <p class="lead">
+                    Tick topics off as you go. Your progress is stored on this device only, so clear your cache if you want to pretend you're chill again.
+                </p>
+            </aside>
+        </div>
+    </section>
+
+    <!-- Course -->
+    <section id="course" aria-labelledby="course-heading">
+        <h2 id="course-heading">Core Topics <span class="badge">Course</span></h2>
+        <p class="lead">Start wherever annoys you most. There is no wrong order, only wrong opinions.</p>
+        <div class="course-grid" id="course-grid" aria-live="polite"></div>
+    </section>
+
+    <!-- Grump Tools -->
+    <section id="tools" aria-labelledby="tools-heading">
+        <h2 id="tools-heading">Grump Tools <span class="badge">Practice</span></h2>
+        <p class="lead">Warm up the complaining muscles before unleashing the AI.</p>
+        <div class="tools-grid">
+            <div class="card">
+                <h3>Rant Starter Generator</h3>
+                <p>Pick a topic and get a classic opening line to build on.</p>
+                <label class="small-label" for="rant-topic">Pick your battle</label>
+                <select id="rant-topic">
+                    <option value="neighbours">Neighbours &amp; their bloody bins</option>
+                    <option value="kids">Kids these days</option>
+                    <option value="prices">Prices &amp; cost of living</option>
+                    <option value="government">Government &amp; bureaucracy</option>
+                    <option value="traffic">Traffic &amp; bad driving</option>
+                    <option value="supermarkets">Supermarkets &amp; queues</option>
+                </select>
+                <button class="primary" id="rant-generate" style="margin-top:0.5rem;">Give me a starter line</button>
+                <p class="quote" id="rant-output" aria-live="polite" style="margin-top:0.6rem;">
+                    Pick a topic and I'll tee you up.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>Polite &rarr; Grumpy Converter</h3>
+                <p>Paste something far too reasonable and we'll rough it up a little.</p>
+                <label class="small-label" for="polite-input">Polite version</label>
+                <textarea id="polite-input" placeholder="Hi neighbour, just wondering if you could maybe move your bin..."></textarea>
+                <button class="primary" id="polite-btn" style="margin-top:0.5rem;">Make it grumpier (offline)</button>
+                <label class="small-label" for="grumpy-output" style="margin-top:0.5rem;">Offline grumpy suggestion</label>
+                <textarea id="grumpy-output" readonly placeholder="Your grumpified text will appear here."></textarea>
+                <p class="small-label" style="margin-top:0.3rem;">For smarter rewrites, use the Cheeky AI below.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cheeky AI -->
+    <section id="ai" aria-labelledby="ai-heading">
+        <h2 id="ai-heading">Cheeky AI Sidekick <span class="badge">Beta</span></h2>
+        <p class="lead">
+            This is <strong>Old Mate Grump</strong>, your AI assistant. He helps you draft letters, sharpen rants, and rate your grump level.
+        </p>
+
+        <div class="chat-shell">
+            <div class="chat-window">
+                <div class="pill-buttons" aria-label="Quick prompts">
+                    <button data-prompt="Help me write a grumpy letter about my neighbour's bins.">Bins letter</button>
+                    <button data-prompt="Rate my rant about grocery prices and make it sharper.">Rate my rant</button>
+                    <button data-prompt="Give me three classic old man complaints about modern technology.">Old man vs tech</button>
+                </div>
+                <div class="chat-log" id="chat-log" aria-live="polite" aria-label="Conversation with Old Mate Grump">
+                    <div class="msg bot">
+                        <div class="msg-label">Old Mate Grump</div>
+                        <div class="msg-bubble">
+                            Righto, apprentice. Ask a question or paste a draft rant and I'll tell you if it's up to grumpy standard.
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chat-input" placeholder="Ask the old bloke anything about being grumpy..." aria-label="Your message to Old Mate Grump" />
+                    <button class="primary" id="chat-send">Ask the Old Bloke</button>
+                </div>
+            </div>
+
+            <aside class="chat-side-card hidden" id="ai-settings-panel">
+                <strong>AI Settings &amp; Test</strong>
+                <p class="small-label" style="margin-top:0.4rem;">Stored in this browser only.</p>
+
+                <label class="small-label" for="ai-base-url" style="margin-top:0.4rem;">API Base URL</label>
+                <input type="text" id="ai-base-url" placeholder="https://api.groq.com/openai/v1/chat/completions" />
+
+                <label class="small-label" for="ai-model" style="margin-top:0.5rem;">Model name</label>
+                <input type="text" id="ai-model" placeholder="llama-3.1-8b-instant" />
+
+                <label class="small-label" for="ai-key" style="margin-top:0.5rem;">API key</label>
+                <input type="text" id="ai-key" placeholder="Paste your Groq key here or leave blank for demo mode" />
+
+                <div style="display:flex; gap:0.5rem; margin-top:0.6rem; flex-wrap:wrap;">
+                    <button type="button" class="primary" id="ai-save">Save settings</button>
+                    <button type="button" class="primary" id="ai-test">Test AI connection</button>
+                </div>
+
+                <p id="ai-status" class="small-label" aria-live="polite" style="margin-top:0.4rem;"></p>
+
+                <hr style="margin:0.8rem 0; border:none; border-top:1px solid var(--border);" />
+
+                <p class="disclaimer">
+                    <strong>Note:</strong> For a simple setup, just call Groq directly with your key. If you ever want extra security, a dev can hide the key behind a tiny server.
+                </p>
+            </aside>
+        </div>
+    </section>
+
+    <!-- Certificate -->
+    <section id="certificate" aria-labelledby="certificate-heading">
+        <h2 id="certificate-heading">Grumpy Old Man Certificate <span class="badge">Reward</span></h2>
+        <p class="lead">
+            When you've ticked off the topics you reckon you've mastered, print yourself a proper certificate to wave at kids, neighbours and unsuspecting supermarket staff.
+        </p>
+        <div class="card">
+            <label class="small-label" for="cert-name">Your name for the certificate</label>
+            <input type="text" id="cert-name" placeholder="e.g. Ian Fraser" />
+
+            <label class="small-label" for="cert-bg" style="margin-top:0.6rem;">Certificate background</label>
+            <select id="cert-bg">
+                <option value="classic">Classic border (default)</option>
+                <option value="parchment-light">Parchment &mdash; light</option>
+                <option value="parchment-dark">Parchment &mdash; dark</option>
+                <option value="none">Plain white</option>
+            </select>
+
+            <label class="small-label" style="display:flex;align-items:center;gap:0.4rem;margin-top:0.4rem;">
+                <input type="checkbox" id="cert-include-qr" checked />
+                Include QR code linking back to this course
+            </label>
+
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem;">
+                <button class="primary" id="cert-generate">Download PDF Certificate</button>
+                <button class="primary" id="cert-preview" type="button">Preview in new tab</button>
+            </div>
+
+            <p id="cert-status" class="small-label" aria-live="polite" style="margin-top:0.4rem;"></p>
+            <p class="small-label" style="margin-top:0.4rem;">
+                The certificate includes your name, your completed modules, a grump level badge, optional QR code and signatures for extra seriousness.
+            </p>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" aria-labelledby="about-heading">
+        <h2 id="about-heading">About This Nonsense <span class="badge">Info</span></h2>
+        <p class="lead">
+            This page is a tongue-in-cheek training ground for would-be grumps. Host it anywhere that serves static files and enjoy.
+        </p>
+        <div class="card">
+            <p><strong>Intent:</strong> Make people laugh, not miserable. Use your new skills for harmless whinging and occasionally productive complaints.</p>
+            <p><strong>Tech overview:</strong> Pure HTML, CSS and vanilla JavaScript. AI uses a simple fetch call you can point at any compatible API.</p>
+            <p class="disclaimer">
+                <strong>Disclaimer:</strong> This is humour, not legal advice, life coaching or therapy. Any resemblance to real grumpy old men, living or muttering, is entirely deliberate.</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="container">
+        <div>Developed by Ian Fraser &mdash; The Grumpy Old Man Project.</div>
+        <div class="disclaimer">All rights reserved. Use your grump powers responsibly.</div>
+    </div>
+</footer>
+
+<!-- jsPDF for certificate PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- QR code generator for certificate -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+/* ---------- Data ---------- */
+const topics = [
+  {
+    id: "neighbours-bins-lawns",
+    title: "Neighbours, Bins & Lawns",
+    desc: "From crooked wheelie bins to grass 1 cm too long, master the art of suburban side-eye.",
+    skills: [
+      "Complain without naming names",
+      "Leave politely passive-aggressive notes"
+    ],
+    sample: "Some of us still know how to put a bin in a straight line, but anyway..."
+  },
+  {
+    id: "kids-these-days",
+    title: "Kids These Days",
+    desc: "Complain about younger generations while conveniently forgetting your own history.",
+    skills: [
+      "Start rants with 'back in my day'",
+      "Blame phones for everything"
+    ],
+    sample: "Back in my day we went outside, got sunburnt and liked it, not this indoors nonsense."
+  },
+  {
+    id: "prices-cost-of-living",
+    title: "Prices & Cost of Living",
+    desc: "Perfect the sacred art of telling everyone what bread used to cost.",
+    skills: [
+      "Quote prices from decades ago",
+      "Call every price rise 'they're dreaming'"
+    ],
+    sample: "Four bucks for a loaf of bread? They're absolutely dreaming, mate."
+  },
+  {
+    id: "government-bureaucracy",
+    title: "Government & Bureaucracy",
+    desc: "Channel your inner talkback caller without getting banned from the station.",
+    skills: [
+      "Open with 'I'll tell you what's wrong with this country'",
+      "Complain about red tape on principle"
+    ],
+    sample: "I'll tell you what's wrong with this country, and it starts with a form in triplicate."
+  },
+  {
+    id: "traffic-driving",
+    title: "Traffic, Utes & Bad Driving",
+    desc: "From tailgaters to back-seat drivers, everyone is wrong except you.",
+    skills: [
+      "Shout advice at cars with closed windows",
+      "Treat indicators as a moral test"
+    ],
+    sample: "Indicators aren't optional decorations, champ, they're there for a reason."
+  },
+  {
+    id: "supermarkets-queues",
+    title: "Supermarkets & Queues",
+    desc: "Learn to suffer in a line with maximum theatrical sighing.",
+    skills: [
+      "Predict the slowest checkout instantly",
+      "Complain about self-checkouts replacing jobs"
+    ],
+    sample: "Of course the person in front of me has a trolley full of loose vegetables."
+  },
+  {
+    id: "technology-and-gadgets",
+    title: "Technology & Gadgets",
+    desc: "Complain about technology while relying on it for absolutely everything.",
+    skills: [
+      "Ask why they had to change it",
+      "Insist paper is more reliable than the cloud"
+    ],
+    sample: "We had one button and it worked. Now there are fifty and none of them do what I want."
+  },
+  {
+    id: "traditions-and-back-in-my-day",
+    title: "Traditions & 'Back in My Day'",
+    desc: "Weaponise nostalgia for maximum storytelling impact.",
+    skills: [
+      "Turn any topic into a 1979 story",
+      "Talk about 'real music' at least twice a week"
+    ],
+    sample: "Back in my day we fixed things instead of throwing them out every five minutes."
+  },
+  {
+    id: "weather-and-small-talk",
+    title: "Weather & Small Talk",
+    desc: "Turn harmless chat about the weather into a mini TED talk on how everything's broken.",
+    skills: [
+      "Use the forecast to complain about power bills",
+      "Derail small talk into a full-scale rant"
+    ],
+    sample: "Hot again? Power company's loving this, I can tell you right now."
+  },
+  {
+    id: "modern-manners-and-etiquette",
+    title: "Modern Manners & Etiquette",
+    desc: "Become the self-appointed sheriff of common sense and basic decency.",
+    skills: [
+      "Tsk loudly at speakerphone calls in public",
+      "Say 'it's not that hard' at least twice a day"
+    ],
+    sample: "It's not that hard to say please and thank you, but apparently it's optional now."
+  }
+];
+
+/* ---------- Progress & Course ---------- */
+const COURSE_KEY = "grumpy_course_progress_v1";
+const loadProgress = () => {
+  try { return JSON.parse(localStorage.getItem(COURSE_KEY) || "{}"); } catch { return {}; }
+};
+const saveProgress = (p) => {
+  try { localStorage.setItem(COURSE_KEY, JSON.stringify(p)); } catch {}
+};
+const getCompletedTopics = () => {
+  const p = loadProgress();
+  return topics.filter(t => p[t.id]);
+};
+
+function updateProgressSummary() {
+  const p = loadProgress();
+  const total = topics.length;
+  const completed = topics.filter(t => p[t.id]).length;
+  const percent = total ? Math.round((completed / total) * 100) : 0;
+
+  const bar = document.getElementById("progress-bar-inner");
+  if (bar) {
+    bar.style.width = percent + "%";
+    bar.parentElement.setAttribute("aria-valuenow", String(percent));
+  }
+  const completedEl = document.getElementById("completed-count");
+  const totalEl = document.getElementById("total-count");
+  if (completedEl) completedEl.textContent = String(completed);
+  if (totalEl) totalEl.textContent = String(total);
+
+  const emojiEl = document.getElementById("progress-emoji");
+  if (emojiEl) {
+    const emoji = percent >= 80 ? "🔥" : percent >= 50 ? "😏" : percent >= 20 ? "🙂" : "😐";
+    emojiEl.textContent = emoji;
+  }
+}
+
+function renderTopics() {
+  const grid = document.getElementById("course-grid");
+  if (!grid) return;
+  const progress = loadProgress();
+  grid.innerHTML = "";
+
+  topics.forEach(t => {
+    const card = document.createElement("article");
+    card.className = "card";
+    card.dataset.topicId = t.id;
+    card.innerHTML = `
+      <h3>${t.title}</h3>
+      <p>${t.desc}</p>
+      <ul class="skills">${t.skills.map(s => `<li>${s}</li>`).join("")}</ul>
+      <p class="quote"><strong>Classic line:</strong> ${t.sample}</p>
+      <div class="topic-footer">
+        <label><input type="checkbox" ${progress[t.id] ? "checked" : ""}/> Mark as mastered</label>
+        <span class="chip">Topic ID: ${t.id}</span>
+      </div>`;
+    const checkbox = card.querySelector("input[type='checkbox']");
+    if (checkbox) {
+      checkbox.addEventListener("change", e => {
+        const p = loadProgress();
+        p[t.id] = e.target.checked;
+        saveProgress(p);
+        updateProgressSummary();
+      });
+    }
+    grid.appendChild(card);
+  });
+
+  updateProgressSummary();
+}
+
+/* ---------- Nav scroll ---------- */
+$$("nav button[data-scroll]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const target = document.getElementById(btn.dataset.scroll);
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
+
+/* ---------- Rant Starter ---------- */
+const rantStarters = {
+  neighbours: [
+    "Look, I'm not asking for perfection, just that your bin isn't auditioning for modern art.",
+    "Some of us still line our bins up like we were raised properly, you know.",
+    "Is there a reason your bin lives on the footpath now, or is it just a lifestyle choice?",
+  ],
+  kids: [
+    "Kids these days can't walk five metres without a screen and a snack.",
+    "When I was their age, we were outside getting sunburnt, not indoors whinging about Wi-Fi.",
+    "If eye-rolling was an Olympic sport, half of them would have gold medals by now.",
+  ],
+  prices: [
+    "You call this a special? I've seen better prices in a natural disaster.",
+    "Four bucks for bread and they're acting like they're doing us a favour.",
+    "At this rate, I'll have to take out a loan to buy cheese.",
+  ],
+  government: [
+    "I'll tell you what's wrong with this country, and it starts with a form in triplicate.",
+    "Somewhere in Canberra, there's a committee dedicated to making this more complicated.",
+    "You'd get more sense out of a wheelie bin than half of Parliament.",
+  ],
+  traffic: [
+    "Indicators are not optional decorations, champion.",
+    "If you're doing 70 in the right lane, we need to have a serious conversation.",
+    "I didn't know the speed limit was 'whichever number you feel in your heart today'.",
+  ],
+  supermarkets: [
+    "Of course they open one checkout when there's thirty people waiting.",
+    "Self-checkout again. Great, I'm working here now apparently.",
+    "Nothing says 'special' like jacking the price up first.",
+  ],
+};
+
+const rantGenerateBtn = document.getElementById("rant-generate");
+if (rantGenerateBtn) {
+  rantGenerateBtn.addEventListener("click", () => {
+    const topic = document.getElementById("rant-topic").value;
+    const options = rantStarters[topic] || [];
+    const out = document.getElementById("rant-output");
+    if (!out) return;
+    out.textContent = options.length
+      ? options[Math.floor(Math.random() * options.length)]
+      : "Pick a topic first, sport.";
+  });
+}
+
+/* ---------- Polite -> Grumpy (offline) ---------- */
+const politeBtn = document.getElementById("polite-btn");
+if (politeBtn) {
+  politeBtn.addEventListener("click", () => {
+    const inputEl = document.getElementById("polite-input");
+    const out = document.getElementById("grumpy-output");
+    if (!inputEl || !out) return;
+    const input = inputEl.value.trim();
+    if (!input) {
+      out.value = "Give me something polite to ruin first.";
+      return;
+    }
+    let g = input
+      .replace(/just wondering/gi, "pointing out")
+      .replace(/maybe/gi, "actually")
+      .replace(/a bit/gi, "completely")
+      .replace(/could you/gi, "you might want to finally");
+    if (!/[!.?]$/.test(g)) g += ".";
+    out.value = g + " And while we're at it, some of us still remember basic manners and common sense.";
+  });
+}
+
+/* ---------- Cheeky AI (Groq-compatible) ---------- */
+const chatLog = document.getElementById("chat-log");
+const chatInput = document.getElementById("chat-input");
+const chatSend = document.getElementById("chat-send");
+
+const SETTINGS_STORAGE_KEY = "grumpy_ai_settings_v1";
+const defaultSettings = {
+  baseUrl: "https://api.groq.com/openai/v1/chat/completions",
+  model: "llama-3.1-8b-instant",
+  apiKey: "",
+};
+
+const loadAiSettings = () => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    return raw ? { ...defaultSettings, ...JSON.parse(raw) } : { ...defaultSettings };
+  } catch {
+    return { ...defaultSettings };
+  }
+};
+
+const saveAiSettings = (s) => {
+  try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(s)); } catch {}
+};
+
+let AI_CONFIG = loadAiSettings();
+
+const SYSTEM_PROMPT =
+  "You are 'Old Mate Grump', a grumpy but good-natured Aussie old bloke. " +
+  "You help users write humorous grumpy rants, letters and comebacks without being hateful. " +
+  "Keep replies short, cheeky, and PG-13. Complain about situations, never attack protected groups.";
+
+const RATE_LIMIT = { maxPerMinute: 10 };
+let callTimestamps = [];
+
+const canMakeCall = () => {
+  const now = Date.now();
+  callTimestamps = callTimestamps.filter((t) => now - t < 60000);
+  if (callTimestamps.length >= RATE_LIMIT.maxPerMinute) return false;
+  callTimestamps.push(now);
+  return true;
+};
+
+function appendMessage(role, text) {
+  if (!chatLog) return;
+  const msg = document.createElement("div");
+  msg.className = "msg " + (role === "user" ? "user" : "bot");
+  msg.innerHTML = `<div class="msg-label">${role === "user" ? "You" : "Old Mate Grump"}</div>
+                   <div class="msg-bubble">${text}</div>`;
+  chatLog.appendChild(msg);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+async function callGrumpAI(message, opts) {
+  const options = opts || {};
+  const isTest = !!options.isTest;
+  const demoMode = !AI_CONFIG.apiKey;
+
+  if (demoMode) {
+    const canned = [
+      "Not bad, but you could easily add another sentence about how no one has standards anymore.",
+      "Solid start. Tighten it up, cut the fluff, and add one brutally honest line at the end.",
+      "That's a polite email with a slightly raised eyebrow. You can afford to be 20% grumpier.",
+      "Good whinge, but where's the part about how it 'used to be'? Always add a 'back in my day' line.",
+      "Honestly, that's not bad. I'd sign that and send it to the council right now.",
+    ];
+    const base = canned[Math.floor(Math.random() * canned.length)];
+    const extra =
+      message.length > 140
+        ? " You've clearly been stewing on this for a while, which I respect."
+        : " Next time, give me a bit more detail so I can really sink my teeth into it.";
+    return isTest
+      ? "Demo mode only: no real API key set, using canned replies."
+      : base + extra;
+  }
+
+  const res = await fetch(AI_CONFIG.baseUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${AI_CONFIG.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: AI_CONFIG.model,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: message },
+      ],
+      max_tokens: 250,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!res.ok) throw new Error("API error " + res.status);
+  const data = await res.json();
+  return (data.choices?.[0]?.message?.content || "The old bloke's lost his train of thought.").trim();
+}
+
+async function handleChatSend() {
+  if (!chatInput || !chatSend) return;
+  const text = chatInput.value.trim();
+  if (!text) return;
+  if (!canMakeCall()) {
+    appendMessage("bot", "Whoa there, turbo. Let the old bloke catch up before you fire off more questions.");
+    return;
+  }
+  appendMessage("user", text);
+  chatInput.value = "";
+  chatInput.focus();
+
+  chatSend.disabled = true;
+  const label = chatSend.textContent;
+  chatSend.textContent = "Thinking...";
+
+  try {
+    const reply = await callGrumpAI(text);
+    appendMessage("bot", reply);
+  } catch (e) {
+    appendMessage(
+      "bot",
+      "The old bloke's had a nap and something went wrong with the AI call. Check your settings or try again later."
+    );
+  } finally {
+    chatSend.disabled = false;
+    chatSend.textContent = label;
+  }
+}
+
+if (chatSend && chatInput) {
+  chatSend.addEventListener("click", handleChatSend);
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleChatSend();
+    }
+  });
+}
+
+$$(".pill-buttons button[data-prompt]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (!chatInput) return;
+    chatInput.value = btn.dataset.prompt || "";
+    chatInput.focus();
+  });
+});
+
+/* ---------- AI Settings panel + Easter egg ---------- */
+const baseUrlEl = document.getElementById("ai-base-url");
+const modelEl = document.getElementById("ai-model");
+const keyEl = document.getElementById("ai-key");
+const saveBtn = document.getElementById("ai-save");
+const testBtn = document.getElementById("ai-test");
+const statusEl = document.getElementById("ai-status");
+const aiSettingsPanel = document.getElementById("ai-settings-panel");
+
+function syncSettingsToUi() {
+  if (!baseUrlEl || !modelEl || !keyEl) return;
+  baseUrlEl.value = AI_CONFIG.baseUrl;
+  modelEl.value = AI_CONFIG.model;
+  keyEl.value = AI_CONFIG.apiKey ? "•••••• (stored locally)" : "";
+}
+
+function syncUiToSettings() {
+  if (!baseUrlEl || !modelEl || !keyEl) return;
+  const rawKey = keyEl.value.trim();
+  AI_CONFIG = {
+    baseUrl: baseUrlEl.value.trim() || defaultSettings.baseUrl,
+    model: modelEl.value.trim() || defaultSettings.model,
+    apiKey: rawKey === "" || rawKey.startsWith("••••••") ? AI_CONFIG.apiKey : rawKey,
+  };
+  saveAiSettings(AI_CONFIG);
+}
+
+if (saveBtn) {
+  saveBtn.addEventListener("click", () => {
+    syncUiToSettings();
+    if (statusEl) statusEl.textContent = "Settings saved. Give it a whirl.";
+  });
+}
+
+if (testBtn) {
+  testBtn.addEventListener("click", async () => {
+    if (!canMakeCall()) {
+      if (statusEl) statusEl.textContent = "Slow down, you're hitting the rate limit.";
+      return;
+    }
+    syncUiToSettings();
+    if (statusEl) statusEl.textContent = "Testing connection...";
+    testBtn.disabled = true;
+    try {
+      const reply = await callGrumpAI(
+        "Give me a very short confirmation (one sentence) that you're awake, Old Mate Grump.",
+        { isTest: true }
+      );
+      if (statusEl) statusEl.textContent = "Success: " + reply.slice(0, 140);
+    } catch (e) {
+      if (statusEl) statusEl.textContent = "Test failed: " + (e.message || e.toString());
+    } finally {
+      testBtn.disabled = false;
+    }
+  });
+}
+
+// Easter egg: click progress emoji 5x in 3s to toggle settings
+let emojiClicks = 0;
+let emojiTimer = null;
+const emojiEl = document.getElementById("progress-emoji");
+if (emojiEl && aiSettingsPanel && statusEl) {
+  emojiEl.style.cursor = "pointer";
+  emojiEl.title = "Grump level";
+  emojiEl.addEventListener("click", () => {
+    emojiClicks++;
+    if (emojiTimer) clearTimeout(emojiTimer);
+    emojiTimer = setTimeout(() => {
+      emojiClicks = 0;
+    }, 3000);
+    if (emojiClicks >= 5) {
+      aiSettingsPanel.classList.toggle("hidden");
+      emojiClicks = 0;
+      statusEl.textContent = aiSettingsPanel.classList.contains("hidden")
+        ? "AI settings hidden again. Nothing to see here."
+        : "Secret AI settings unlocked. G'day, admin.";
+    }
+  });
+}
+
+/* ---------- Certificate generation ---------- */
+const certNameInput = document.getElementById("cert-name");
+const certButton = document.getElementById("cert-generate");
+const certPreviewButton = document.getElementById("cert-preview");
+const certBgSelect = document.getElementById("cert-bg");
+const certIncludeQr = document.getElementById("cert-include-qr");
+const certStatus = document.getElementById("cert-status");
+
+function getJsPdfRoot() {
+  if (window.jspdf && window.jspdf.jsPDF) return window.jspdf;
+  if (typeof window.jsPDF === "function") return { jsPDF: window.jsPDF };
+  return null;
+}
+
+function buildCertificateDoc() {
+  const name = (certNameInput?.value || "Unnamed Apprentice").trim();
+  const completedTopics = getCompletedTopics();
+
+  const root = getJsPdfRoot();
+  if (!root || !root.jsPDF) {
+    console.warn("jsPDF not available. window.jspdf:", window.jspdf, "window.jsPDF:", window.jsPDF);
+    if (certStatus) certStatus.textContent = "PDF generator not available in this browser/context. Try from a standard browser tab.";
+    return null;
+  }
+  if (!completedTopics.length) {
+    if (certStatus) certStatus.textContent = "You haven't marked any topics as mastered yet, sport. Tick a few boxes first.";
+    return null;
+  }
+
+  const jsPDF = root.jsPDF;
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Background style
+  const bgStyle = certBgSelect ? (certBgSelect.value || "classic") : "classic";
+  if (bgStyle === "parchment-light") {
+    doc.setFillColor(245, 237, 220);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  } else if (bgStyle === "parchment-dark") {
+    doc.setFillColor(230, 220, 200);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  }
+
+  // Outer border
+  doc.setDrawColor(120, 80, 60);
+  doc.setLineWidth(4);
+  doc.rect(24, 24, pageWidth - 48, pageHeight - 48);
+
+  // Heading
+  doc.setFont("times", "bold");
+  doc.setFontSize(32);
+  doc.text("Certificate of Advanced Grumpiness", pageWidth / 2, 120, { align: "center" });
+
+  // Grump level badge
+  const totalTopics = topics.length || 1;
+  const completedTopicsCount = completedTopics.length;
+  const grumpPercent = Math.round((completedTopicsCount / totalTopics) * 100);
+  let level = "Apprentice Grump";
+  if (grumpPercent >= 80) level = "Unstoppable Menace";
+  else if (grumpPercent >= 60) level = "Gold-Class Curmudgeon";
+  else if (grumpPercent >= 40) level = "Silver-Grade Sook";
+  else if (grumpPercent >= 20) level = "Bronze Whinger";
+
+  doc.setFontSize(14);
+  doc.setFont("times", "italic");
+  doc.text(
+    "Official Grump Level: " + level + " (" + grumpPercent + "% complete)",
+    pageWidth / 2,
+    145,
+    { align: "center" }
+  );
+
+  // Body text
+  doc.setFontSize(16);
+  doc.setFont("times", "normal");
+  doc.text("This certifies that", pageWidth / 2, 180, { align: "center" });
+
+  doc.setFont("times", "bold");
+  doc.setFontSize(28);
+  doc.text(name, pageWidth / 2, 220, { align: "center" });
+
+  doc.setFont("times", "normal");
+  doc.setFontSize(16);
+  doc.text(
+    "has successfully demonstrated competence in the noble art of being a Grumpy Old Man,",
+    pageWidth / 2,
+    260,
+    { align: "center" }
+  );
+  doc.text(
+    "including completion of the following highly questionable modules:",
+    pageWidth / 2,
+    280,
+    { align: "center" }
+  );
+
+  // Modules list
+  doc.setFontSize(14);
+  const moduleLines = completedTopics.map((t) => "• " + t.title);
+  const listText = doc.splitTextToSize(moduleLines.join("\n"), pageWidth - 160);
+  listText.forEach((line, index) => {
+    doc.text(line, 80, 320 + index * 18);
+  });
+
+  // QR code (optional)
+  const includeQr = !certIncludeQr || certIncludeQr.checked;
+  if (includeQr && typeof QRious === "function") {
+    try {
+      const qr = new QRious({
+        value: window.location && window.location.href ? window.location.href : "https://example.com",
+        size: 120,
+      });
+      const dataUrl = qr.toDataURL("image/png");
+      doc.addImage(dataUrl, "PNG", pageWidth - 180, 90, 100, 100);
+    } catch (e) {
+      console.warn("QR generation failed:", e);
+    }
+  }
+
+  // Signature lines & seal
+  const sigY = pageHeight - 110;
+  doc.setLineWidth(1);
+  doc.line(80, sigY, 260, sigY);
+  doc.line(pageWidth - 260, sigY, pageWidth - 80, sigY);
+  doc.setFontSize(12);
+  doc.text("Signature of Certified Grump", 80, sigY + 16);
+  doc.text("Witness / Family Member", pageWidth - 260, sigY + 16);
+
+  const sealX = pageWidth / 2;
+  const sealY = pageHeight - 120;
+  if (typeof doc.circle === "function") {
+    doc.setDrawColor(120, 80, 60);
+    doc.circle(sealX, sealY, 30);
+  }
+  doc.setFontSize(10);
+  doc.setFont("times", "bold");
+  doc.text("OFFICIAL", sealX, sealY - 4, { align: "center" });
+  doc.text("GRUMP SEAL", sealX, sealY + 10, { align: "center" });
+
+  // Footer info
+  const today = new Date();
+  const dateStr = today.toLocaleDateString();
+  doc.setFont("times", "normal");
+  doc.setFontSize(12);
+  doc.text("Issued on: " + dateStr, pageWidth - 80, pageHeight - 70, { align: "right" });
+  doc.text("The Grumpy Old Man Project", 80, pageHeight - 70);
+
+  doc.setFontSize(10);
+  doc.text(
+    "Use this certificate responsibly. Excessive whinging may annoy friends, family, and small pets.",
+    pageWidth / 2,
+    pageHeight - 40,
+    { align: "center" }
+  );
+
+  return doc;
+}
+
+function handleCertificate(preview) {
+  const name = (certNameInput?.value || "Unnamed Apprentice").trim();
+  const doc = buildCertificateDoc();
+  if (!doc) return;
+
+  const safeName = name.replace(/[^a-z0-9]+/gi, "-") || "grump";
+  if (preview) {
+    doc.output("dataurlnewwindow");
+    if (certStatus) certStatus.textContent = `${name}, a preview has been opened in a new tab (if your browser allowed it).`;
+  } else {
+    doc.save(`Grumpy-Old-Man-Certificate-${safeName}.pdf`);
+    if (certStatus) certStatus.textContent = `${name}, your certificate has been generated. Check your downloads.`;
+  }
+}
+
+if (certButton) {
+  certButton.addEventListener("click", () => handleCertificate(false));
+}
+if (certPreviewButton) {
+  certPreviewButton.addEventListener("click", () => handleCertificate(true));
+}
+
+/* ---------- Initialise ---------- */
+AI_CONFIG = loadAiSettings();
+syncSettingsToUi();
+renderTopics();
+</script>
+</body>
+</html>
