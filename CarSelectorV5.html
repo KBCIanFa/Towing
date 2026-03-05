@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AU Tow Compliance Checker</title>
+<title>Australian Towing Compliance Calculator — GVM, GCM & Caravan Weight Checker</title>
+<meta name="description" content="Free Australian towing calculator. Check GVM, GCM, towball mass, caravan weight and brake requirements instantly. Used by caravanners, tradies and dealerships across Australia.">
+<meta name="keywords" content="towing calculator Australia, caravan weight calculator, GVM GCM calculator, caravan towing check, tow capacity checker, Australian towing laws, towball mass calculator">
+<meta property="og:title" content="AU Tow Compliance Checker — Know Before You Tow">
+<meta property="og:description" content="Free Australian towing calculator. Check GVM, GCM, towball mass and brake rules instantly. No signup required.">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://yourdomain.com/CarSelectorV5.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Nunito:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
@@ -51,20 +57,26 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 label{font-size:.75rem;font-weight:700;color:#B8C8B0;display:block;margin-bottom:.25rem;
   text-transform:uppercase;letter-spacing:.04em}
 input[type=text],input[type=number]{width:100%;background:rgba(255,255,255,.07);
-  border:1px solid rgba(200,114,10,.25);border-radius:6px;color:var(--text);padding:.45rem .65rem;
-  font-size:.85rem;font-family:'Nunito',sans-serif;outline:none;transition:border-color .15s}
+  border:1px solid rgba(200,114,10,.25);border-radius:8px;color:var(--text);padding:.6rem .8rem;
+  font-size:1rem;font-family:'Nunito',sans-serif;outline:none;transition:border-color .15s;
+  -webkit-appearance:none;min-height:44px}
 input:focus{border-color:var(--accent)}
 input::placeholder{color:rgba(184,200,176,.35)}
+@media(max-width:600px){
+  input[type=text],input[type=number]{font-size:16px;padding:.7rem .85rem}
+}
 .div{border:none;border-top:1px solid rgba(200,114,10,.2);margin:.75rem 0}
 .chip-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem}
-.chip{font-size:.72rem;font-weight:700;padding:.22rem .62rem;border-radius:20px;
+.chip{font-size:.78rem;font-weight:700;padding:.35rem .75rem;border-radius:20px;
   border:1px solid rgba(200,114,10,.25);background:rgba(255,255,255,.05);cursor:pointer;
-  transition:all .15s;user-select:none;color:#B8C8B0}
+  transition:all .15s;user-select:none;color:#B8C8B0;min-height:36px;display:inline-flex;align-items:center}
 .chip.on{background:var(--sun1);color:#FAF6EE;border-color:var(--sun1)}
-.btn{width:100%;padding:.6rem 1rem;background:var(--sun1);color:#FAF6EE;border:none;border-radius:8px;
-  font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;
-  transition:background .15s;margin-top:.25rem}
+.btn{width:100%;padding:.8rem 1rem;background:var(--sun1);color:#FAF6EE;border:none;border-radius:10px;
+  font-size:1.05rem;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;
+  transition:background .15s,transform .1s;margin-top:.5rem;min-height:52px;letter-spacing:.02em}
 .btn:hover{background:var(--sun2)}
+.btn:active{transform:scale(.98)}
+@media(max-width:600px){.btn{font-size:1.1rem;padding:.9rem 1rem;min-height:56px}}
 .btn-ghost{width:100%;padding:.5rem;background:rgba(255,255,255,.04);color:#B8C8B0;
   border:1px solid rgba(200,114,10,.2);border-radius:8px;font-size:.82rem;font-weight:600;
   cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;margin-top:.5rem}
@@ -136,10 +148,12 @@ input::placeholder{color:rgba(184,200,176,.35)}
 .pb-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
 
 /* ── STATE SELECTOR ── */
-select.state-sel{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(200,114,10,.25);
-  border-radius:6px;color:var(--text);padding:.45rem .65rem;font-size:.85rem;
-  font-family:'Nunito',sans-serif;outline:none;transition:border-color .15s}
+select.state-sel{width:100%;background:rgba(40,28,12,.95);border:1px solid rgba(200,114,10,.25);
+  border-radius:8px;color:var(--text);padding:.6rem .8rem;font-size:1rem;
+  font-family:'Nunito',sans-serif;outline:none;transition:border-color .15s;min-height:44px;
+  -webkit-appearance:none}
 select.state-sel:focus{border-color:var(--accent)}
+@media(max-width:600px){select.state-sel{font-size:16px}}
 
 /* ── SOURCES BOX ── */
 .sources-box{margin-top:1rem;font-size:.74rem;color:#B8C8B0;line-height:1.9;
@@ -427,6 +441,16 @@ select.state-sel:focus{border-color:var(--accent)}
       • <a href="https://www.vicroads.vic.gov.au/safety-and-road-rules/road-rules/a-guide-to-the-road-rules/towing" target="_blank">VicRoads — Towing Rules</a><br>
       • State road authority guidance: MRWA, DPTI SA, NTMFR, DPAW TAS, ACTTO<br>
       <span style="color:rgba(184,200,176,.5)">This tool is a guide only. Always verify with your state road authority and a qualified tow installer.</span>
+    </div>
+
+    <!-- SHARE -->
+    <hr class="div">
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+      <button class="btn-ghost" style="flex:1;min-width:140px" onclick="copyResult()">📋 Copy Result Summary</button>
+      <button class="btn-ghost" style="flex:1;min-width:140px" onclick="shareResult()">🔗 Share This Result</button>
+    </div>
+    <div id="share-confirm" style="display:none;font-size:.75rem;color:#7AAA68;text-align:center;margin-top:.4rem;padding:.3rem">
+      ✓ Copied to clipboard — paste it in your group or forum
     </div>
   </div>
 
@@ -804,6 +828,67 @@ function toggleDetail() {
   var open = d.style.display === 'block';
   d.style.display  = open ? 'none' : 'block';
   btn.textContent  = open ? '▼ Show detailed breakdown' : '▲ Hide detailed breakdown';
+}
+
+function buildResultText() {
+  var make    = document.getElementById('c-vmake').value.trim();
+  var model   = document.getElementById('c-vmodel').value.trim();
+  var vLabel  = [make, model].filter(Boolean).join(' ') || 'My Vehicle';
+  var atm     = n('c-atm');
+  var tactual = n('c-tactual');
+  var vtow    = n('c-vtow');
+  var vgvm    = n('c-vgvm');
+  var vgcm    = n('c-vgcm');
+  var stateEl = document.getElementById('c-state');
+  var stateLabel = stateEl ? stateEl.options[stateEl.selectedIndex].text : '';
+  var items = document.querySelectorAll('#r-quickscan .qs-item');
+  var lines = ['AU Tow Compliance Check — ' + vLabel];
+  lines.push('Trailer: ' + (tactual || atm) + ' kg | Tow rating: ' + vtow + ' kg | GVM: ' + vgvm + ' kg' + (vgcm ? ' | GCM: ' + vgcm + ' kg' : ''));
+  if (stateLabel) lines.push('State: ' + stateLabel);
+  lines.push('');
+  items.forEach(function(el) {
+    var s = el.classList.contains('pass') ? '✔' : el.classList.contains('fail') ? '✖' : '⚠';
+    lines.push(s + ' ' + el.textContent.replace(/\s+/g,' ').trim());
+  });
+  var pb = document.getElementById('pb-remain');
+  if (pb && pb.textContent !== '—') lines.push('Payload remaining: ' + pb.textContent);
+  lines.push('');
+  lines.push('Checked with AU Tow Compliance Checker (free tool)');
+  lines.push('Guide only. Always verify with a weighbridge and your state road authority.');
+  return lines.join('\n');
+}
+
+function copyResult() {
+  var text = buildResultText();
+  var confirm = function() {
+    var c = document.getElementById('share-confirm');
+    c.style.display = 'block';
+    setTimeout(function() { c.style.display = 'none'; }, 3500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(confirm).catch(function() {
+      legacyCopy(text); confirm();
+    });
+  } else {
+    legacyCopy(text); confirm();
+  }
+}
+
+function legacyCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function shareResult() {
+  var text = buildResultText();
+  if (navigator.share) {
+    navigator.share({ title: 'My Tow Compliance Check', text: text }).catch(function() { copyResult(); });
+  } else {
+    copyResult();
+  }
 }
 </script>
 </body>
