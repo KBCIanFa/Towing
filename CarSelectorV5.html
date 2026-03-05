@@ -209,6 +209,10 @@ input::placeholder{color:rgba(184,200,176,.35)}
         <label>GCM (kg) — from manual</label>
         <input type="number" id="c-vgcm" placeholder="e.g. 6700" min="0">
       </div>
+      <div>
+        <label>Kerb Weight (kg) — unladen</label>
+        <input type="number" id="c-vkerb" placeholder="e.g. 2350" min="0">
+      </div>
     </div>
     <hr class="div">
     <div class="grid3">
@@ -342,13 +346,36 @@ function runCheck() {
 
   // 3. GCM
   if (vgcm) {
-    var estGCM = vgvm * 0.9 + atm;
-    checks.push({
-      label: 'GCM (estimated)',
-      val:   '~' + Math.round(estGCM).toLocaleString() + ' / ' + vgcm.toLocaleString() + ' kg',
-      s:     estGCM <= vgcm ? 'pass' : 'fail',
-      note:  'Based on 90% of GVM + ATM. Verify with actual kerb weight + occupants.'
-    });
+    var vkerb     = n('c-vkerb');
+    var vpayload2 = n('c-vpayload');
+    var vloadNow  = ball + vpax + vcargo + vroof;
+    if (vkerb) {
+      var loadedVehicle = vkerb + vloadNow;
+      var estGCM = loadedVehicle + atm;
+      checks.push({
+        label: 'GCM (estimated)',
+        val:   '~' + Math.round(estGCM).toLocaleString() + ' / ' + vgcm.toLocaleString() + ' kg',
+        s:     estGCM <= vgcm ? 'pass' : 'fail',
+        note:  'Kerb weight (' + vkerb.toLocaleString() + ' kg) + current load (' + Math.round(vloadNow).toLocaleString() + ' kg) + ATM.'
+      });
+    } else if (vpayload2) {
+      var remaining2 = vpayload2 - vloadNow;
+      var loadedVehicle2 = vgvm - remaining2;
+      var estGCM2 = loadedVehicle2 + atm;
+      checks.push({
+        label: 'GCM (estimated)',
+        val:   '~' + Math.round(estGCM2).toLocaleString() + ' / ' + vgcm.toLocaleString() + ' kg',
+        s:     estGCM2 <= vgcm ? 'pass' : 'fail',
+        note:  'GVM minus remaining payload (' + Math.round(loadedVehicle2).toLocaleString() + ' kg) + ATM. Enter Kerb Weight for best accuracy.'
+      });
+    } else {
+      checks.push({
+        label: 'GCM',
+        val:   'Enter Kerb Weight',
+        s:     'warn',
+        note:  'GCM cannot be reliably calculated without Kerb Weight. Enter it above to check this combo against your rated GCM.'
+      });
+    }
   }
 
   // 4. Brake requirement
