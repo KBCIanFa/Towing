@@ -175,6 +175,10 @@ input::placeholder{color:rgba(184,200,176,.35)}
         <label>Trailer Payload (kg)</label>
         <input type="number" id="c-tpay" placeholder="Auto-calculated" min="0">
       </div>
+      <div>
+        <label>Actual Loaded Weight (kg)</label>
+        <input type="number" id="c-tactual" placeholder="e.g. 2600 — today's load" min="0">
+      </div>
     </div>
   </div>
 
@@ -301,19 +305,24 @@ function resetAll() {
 }
 
 function runCheck() {
-  var atm    = n('c-atm');
-  var gtm    = n('c-gtm');
-  var ball   = n('c-ball');
-  var vtow   = n('c-vtow');
-  var vball  = n('c-vball');
-  var vgvm   = n('c-vgvm');
-  var vgcm   = n('c-vgcm');
-  var vpax   = n('c-vpax');
-  var vcargo = n('c-vcargo');
-  var vroof  = n('c-vroof');
-  var brakes = chipVal('chips-brakes');
-  var make   = document.getElementById('c-vmake').value.trim();
-  var model  = document.getElementById('c-vmodel').value.trim();
+  var atm     = n('c-atm');
+  var tactual = n('c-tactual');
+  var trailerMass = tactual || atm;  // actual loaded weight if entered, else ATM
+  var gtm     = n('c-gtm');
+  var ball    = n('c-ball');
+  var vtow    = n('c-vtow');
+  var vball   = n('c-vball');
+  var vgvm    = n('c-vgvm');
+  var vgcm    = n('c-vgcm');
+  var vkerb   = n('c-vkerb');
+  var vpayload= n('c-vpayload');
+  var vpax    = n('c-vpax');
+  var vcargo  = n('c-vcargo');
+  var vroof   = n('c-vroof');
+  var brakes  = chipVal('chips-brakes');
+  var make    = document.getElementById('c-vmake').value.trim();
+  var model   = document.getElementById('c-vmodel').value.trim();
+  var vload   = ball + vpax + vcargo + vroof;
 
   if (!atm || !vtow || !vgvm) {
     alert('Please fill in ATM, Tow Rating and GVM at minimum.');
@@ -322,64 +331,65 @@ function runCheck() {
 
   var checks = [];
 
-  // 1. Tow capacity
+  // 1. Tow capacity — always vs ATM (legal max rating)
   checks.push({
     label: 'Tow Capacity',
-    val:   atm.toLocaleString() + ' / ' + vtow.toLocaleString() + ' kg',
+    val:   atm.toLocaleString() + ' kg ATM / ' + vtow.toLocaleString() + ' kg rated',
     s:     atm <= vtow ? 'pass' : 'fail',
     note:  atm <= vtow
       ? 'ATM is within the manufacturer tow rating ✓'
       : 'ATM exceeds tow rating by ' + (atm - vtow).toLocaleString() + ' kg ❌'
   });
 
-  // 2. Towball mass
-  var ballPct = atm ? (ball / atm) * 100 : 0;
-  var ballS   = (vball && ball > vball) ? 'fail' : (ballPct > 12 || (ballPct < 8 && ball > 0)) ? 'warn' : 'pass';
+  // 2. Towball mass — % based on actual loaded weight if available
+  var ballBase = tactual || atm;
+  var ballPct  = ballBase ? (ball / ballBase) * 100 : 0;
+  var ballS    = (vball && ball > vball) ? 'fail' : (ballPct > 12 || (ballPct < 8 && ball > 0)) ? 'warn' : 'pass';
   checks.push({
     label: 'Towball Mass',
-    val:   ball + ' / ' + vball + ' kg',
+    val:   ball + ' / ' + (vball || '?') + ' kg max',
     s:     ballS,
     note:  (vball && ball > vball)
       ? 'Exceeds max towball mass ❌'
-      : ballPct.toFixed(1) + '% of ATM (ideal range 8–12%)'
+      : ballPct.toFixed(1) + '% of ' + (tactual ? 'actual loaded weight' : 'ATM') + ' (ideal range 8–12%)'
   });
 
-  // 3. GCM
+  // 3. GCM — use actual trailer weight, not ATM
   if (vgcm) {
-    var vkerb     = n('c-vkerb');
-    var vpayload2 = n('c-vpayload');
-    var vloadNow  = ball + vpax + vcargo + vroof;
+    var trailerForGCM = tactual || atm;
+    var gcmSource = tactual ? 'actual loaded weight' : 'ATM (enter Actual Loaded Weight above for accuracy)';
     if (vkerb) {
-      var loadedVehicle = vkerb + vloadNow;
-      var estGCM = loadedVehicle + atm;
+      var loadedVeh = vkerb + vload;
+      var estGCM = loadedVeh + trailerForGCM;
       checks.push({
-        label: 'GCM (estimated)',
+        label: 'GCM',
         val:   '~' + Math.round(estGCM).toLocaleString() + ' / ' + vgcm.toLocaleString() + ' kg',
         s:     estGCM <= vgcm ? 'pass' : 'fail',
-        note:  'Kerb weight (' + vkerb.toLocaleString() + ' kg) + current load (' + Math.round(vloadNow).toLocaleString() + ' kg) + ATM.'
+        note:  'Kerb ' + vkerb.toLocaleString() + ' kg + vehicle load ' + Math.round(vload).toLocaleString() + ' kg + trailer ' + trailerForGCM.toLocaleString() + ' kg (' + gcmSource + ')'
       });
-    } else if (vpayload2) {
-      var remaining2 = vpayload2 - vloadNow;
-      var loadedVehicle2 = vgvm - remaining2;
-      var estGCM2 = loadedVehicle2 + atm;
+    } else if (vpayload) {
+      var rem2 = vpayload - vload;
+      var loadedVeh2 = vgvm - rem2;
+      var estGCM2 = loadedVeh2 + trailerForGCM;
       checks.push({
-        label: 'GCM (estimated)',
+        label: 'GCM',
         val:   '~' + Math.round(estGCM2).toLocaleString() + ' / ' + vgcm.toLocaleString() + ' kg',
         s:     estGCM2 <= vgcm ? 'pass' : 'fail',
-        note:  'GVM minus remaining payload (' + Math.round(loadedVehicle2).toLocaleString() + ' kg) + ATM. Enter Kerb Weight for best accuracy.'
+        note:  'GVM minus remaining payload + trailer ' + trailerForGCM.toLocaleString() + ' kg (' + gcmSource + '). Enter Kerb Weight for best accuracy.'
       });
     } else {
       checks.push({
         label: 'GCM',
         val:   'Enter Kerb Weight',
         s:     'warn',
-        note:  'GCM cannot be reliably calculated without Kerb Weight. Enter it above to check this combo against your rated GCM.'
+        note:  'Cannot calculate GCM without Kerb Weight. Enter it in the vehicle fields above.'
       });
     }
   }
 
-  // 4. Brake requirement
-  var brakesNeeded = gtm > 750 || (!gtm && atm > 750);
+  // 4. Brake requirement — use GTM if known, else actual loaded weight, else ATM
+  var brakeRef = gtm || trailerMass;
+  var brakesNeeded = brakeRef > 750;
   var brakesOk     = !brakesNeeded || brakes !== 'none';
   checks.push({
     label: 'Brake Requirement',
@@ -390,29 +400,27 @@ function runCheck() {
       : 'GTM ≤ 750 kg — brakes not mandatory'
   });
 
-  // 5. Ball weight %
+  // 5. Ball weight % — already calculated above
   checks.push({
     label: 'Ball Weight %',
     val:   ballPct.toFixed(1) + '%',
     s:     (ballPct >= 8 && ballPct <= 12) ? 'pass' : 'warn',
-    note:  'Ideal 8–12% of ATM for stable towing (NTC guideline). Outside range increases sway risk.'
+    note:  'Ideal 8–12% of ' + (tactual ? 'actual loaded weight' : 'ATM') + ' for stable towing (NTC guideline). Outside range increases sway risk.'
   });
 
-  // 6. Tow/GVM ratio
-  var ratio = (atm && vgvm) ? atm / vgvm : 0;
+  // 6. Trailer / GVM ratio — use actual loaded weight if available
+  var ratio = (trailerMass && vgvm) ? trailerMass / vgvm : 0;
   checks.push({
     label: 'Trailer / GVM Ratio',
     val:   ratio ? ratio.toFixed(2) + ':1' : 'N/A',
     s:     ratio > 1.5 ? 'warn' : 'pass',
-    note:  ratio > 1.5
-      ? 'Trailer mass exceeds 1.5× vehicle GVM — consider weight distribution hitch'
-      : 'Ratio within comfortable range'
+    note:  (ratio > 1.5
+      ? 'Trailer mass exceeds 1.5× vehicle GVM — consider weight distribution hitch. '
+      : 'Ratio within comfortable range. ')
+      + (tactual ? 'Using actual loaded weight.' : 'Using ATM — enter Actual Loaded Weight for accuracy.')
   });
 
-  var vpayload = n('c-vpayload');
-
-  // 7. Vehicle load + remaining payload
-  var vload = ball + vpax + vcargo + vroof;
+  // 7. Vehicle payload remaining
   var remaining = vpayload ? vpayload - vload : null;
   var loadS = vpayload
     ? (remaining < 0 ? 'fail' : remaining < 50 ? 'warn' : 'pass')
@@ -421,13 +429,13 @@ function runCheck() {
     label: 'Vehicle Payload',
     val:   vpayload
       ? Math.round(vload).toLocaleString() + ' used / ' + vpayload.toLocaleString() + ' kg capacity'
-      : Math.round(vload).toLocaleString() + ' kg (no capacity entered)',
+      : Math.round(vload).toLocaleString() + ' kg estimated load',
     s:     loadS,
     note:  vpayload
       ? (remaining < 0
-          ? 'Over payload by ' + Math.abs(Math.round(remaining)).toLocaleString() + ' kg ❌ — exceeds payload sticker'
+          ? 'Over payload by ' + Math.abs(Math.round(remaining)).toLocaleString() + ' kg ❌'
           : Math.round(remaining).toLocaleString() + ' kg remaining payload' + (remaining < 50 ? ' — nearly at limit ⚠️' : ' ✓'))
-      : 'Enter Vehicle Payload Capacity above for a remaining payload figure. Compare load against your payload sticker.'
+      : 'Enter Vehicle Payload Capacity for a remaining payload figure.'
   });
 
   var fails = checks.filter(function(c) { return c.s === 'fail'; });
