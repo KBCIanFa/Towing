@@ -590,34 +590,47 @@ function updateAPITable() {
 // ════════════════════════════════════════════════════════════════
 // MAKE/MODEL LOADING (CarQuery)
 // ════════════════════════════════════════════════════════════════
-async function loadMakes() {
+function populateMakes(makes) {
   const targets = ['f-make', 'c-make', 'll-make'];
-  document.getElementById('make-loading').style.display = 'inline';
-
-  let makes = [];
-  try {
-    const data = await cqFetch({cmd:'getMakes'});
-    makes = (data.Makes || []).map(m => ({id: m.make_id, name: m.make_display}));
-  } catch(e) {
-    // Fallback to AU curated list
-    makes = ["BMW","Chery","Ford","GWM","Haval","Holden","Honda","Hyundai","Isuzu","Kia","Land Rover","LDV","Lexus","Mazda","Mercedes-Benz","Mitsubishi","Nissan","Peugeot","Ram","Renault","SsangYong","Subaru","Suzuki","Toyota","Volkswagen","Volvo"]
-      .map(n => ({id: n.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''), name: n}));
-  }
-
-  document.getElementById('make-loading').style.display = 'none';
-
   targets.forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
-    sel.innerHTML = '<option value="">Any Make</option>';
+    const current = sel.value;
+    sel.innerHTML = id === 'f-make'
+      ? '<option value="">Any Make</option>'
+      : '<option value="">Select Make</option>';
     makes.forEach(m => {
       const o = new Option(m.name, m.id);
       o.dataset.name = m.name;
       sel.appendChild(o);
     });
-    // Restore "Select Make" label for non-filter selects
-    if (id !== 'f-make') sel.options[0].text = 'Select Make';
+    if (current) sel.value = current;
   });
+}
+
+async function loadMakes() {
+  // Step 1: Populate IMMEDIATELY from AU_DB — no API needed, works offline
+  const auMakes = [...new Set(AU_DB.map(v => v.make))].sort()
+    .map(n => ({id: n.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''), name: n}));
+  populateMakes(auMakes);
+  document.getElementById('make-loading').style.display = 'none';
+
+  // Step 2: Enhance with full CarQuery makes list in background (non-blocking)
+  try {
+    document.getElementById('make-loading').style.display = 'inline';
+    const data = await cqFetch({cmd:'getMakes'});
+    const cqMakes = (data.Makes || []).map(m => ({id: m.make_id, name: m.make_display}));
+    if (cqMakes.length > 0) {
+      // Merge: AU makes first, then any CQ makes not already in list
+      const auNames = new Set(auMakes.map(m => m.name.toLowerCase()));
+      const extra = cqMakes.filter(m => !auNames.has(m.name.toLowerCase()));
+      populateMakes([...auMakes, ...extra]);
+    }
+  } catch(e) {
+    // CarQuery unavailable — AU makes already loaded, nothing to do
+  } finally {
+    document.getElementById('make-loading').style.display = 'none';
+  }
 }
 
 async function onMakeChange(makeId, modelId) {
