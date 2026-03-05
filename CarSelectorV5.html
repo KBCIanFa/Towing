@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AU Tow Compliance Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Nunito:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root {
+  --bg:     #2A1E0E;
+  --bg2:    #221608;
+  --border: rgba(200,114,10,.3);
+  --text:   #F2E4C4;
+  --muted:  #B8C8B0;
+  --accent: #4A8AAA;
+  --sun1:   #C8720A;
+  --sun2:   #E08820;
+  --green:  #5A7A50;
+  --amber:  #C8720A;
+  --red:    #A63A1A;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(ellipse 120% 80% at 100% 0%,rgba(74,138,170,.08) 0%,transparent 55%),
+                   radial-gradient(ellipse 80% 60% at 0% 100%,rgba(200,114,10,.08) 0%,transparent 50%)}
+.hdr{background:rgba(14,10,4,.9);border-bottom:1px solid var(--border);padding:.65rem 1.5rem;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.hdr-left{display:flex;align-items:center;gap:.75rem}
+.hdr-ico{width:32px;height:32px;background:var(--sun1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.hdr-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-.02em;color:#F2E4C4}
+.hdr-sub{font-size:.7rem;color:#B8C8B0}
+.hdr-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.pill{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.22rem .6rem;
+  border-radius:20px;border:1px solid rgba(200,114,10,.3);color:#B8C8B0;background:rgba(200,114,10,.1)}
+.coffee{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;padding:.22rem .75rem;border-radius:20px;
+  border:1px solid rgba(200,114,10,.4);background:rgba(200,114,10,.12);color:var(--sun2);
+  text-decoration:none;font-family:'Nunito',sans-serif}
+.disclaimer{background:rgba(166,58,26,.12);border-bottom:2px solid rgba(166,58,26,.35);
+  padding:.6rem 1.5rem;font-size:.78rem;color:#B8C8B0;text-align:center;line-height:1.6}
+.wrap{max-width:860px;margin:0 auto;padding:1.5rem 1rem}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(200,114,10,.2);border-radius:12px;
+  padding:1.25rem;margin-bottom:1.25rem;backdrop-filter:blur(4px)}
+.card-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;margin-bottom:1rem;color:var(--sand)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+@media(max-width:580px){.grid2,.grid3{grid-template-columns:1fr}}
+label{font-size:.75rem;font-weight:700;color:#B8C8B0;display:block;margin-bottom:.25rem;
+  text-transform:uppercase;letter-spacing:.04em}
+input[type=text],input[type=number]{width:100%;background:rgba(255,255,255,.07);
+  border:1px solid rgba(200,114,10,.25);border-radius:6px;color:var(--text);padding:.45rem .65rem;
+  font-size:.85rem;font-family:'Nunito',sans-serif;outline:none;transition:border-color .15s}
+input:focus{border-color:var(--accent)}
+input::placeholder{color:rgba(184,200,176,.35)}
+.div{border:none;border-top:1px solid rgba(200,114,10,.2);margin:.75rem 0}
+.chip-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem}
+.chip{font-size:.72rem;font-weight:700;padding:.22rem .62rem;border-radius:20px;
+  border:1px solid rgba(200,114,10,.25);background:rgba(255,255,255,.05);cursor:pointer;
+  transition:all .15s;user-select:none;color:#B8C8B0}
+.chip.on{background:var(--sun1);color:#FAF6EE;border-color:var(--sun1)}
+.btn{width:100%;padding:.6rem 1rem;background:var(--sun1);color:#FAF6EE;border:none;border-radius:8px;
+  font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;
+  transition:background .15s;margin-top:.25rem}
+.btn:hover{background:var(--sun2)}
+.btn-ghost{width:100%;padding:.5rem;background:rgba(255,255,255,.04);color:#B8C8B0;
+  border:1px solid rgba(200,114,10,.2);border-radius:8px;font-size:.82rem;font-weight:600;
+  cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;margin-top:.5rem}
+.btn-ghost:hover{border-color:var(--sun2);color:var(--sand)}
+#results{display:none}
+.summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem;text-align:center}
+.sb-item{background:rgba(255,255,255,.05);border:1px solid rgba(200,114,10,.2);border-radius:8px;padding:.5rem}
+.sb-num{font-size:1.4rem;font-weight:800;font-family:'Syne',sans-serif}
+.sb-lbl{font-size:.65rem;color:#B8C8B0;text-transform:uppercase;letter-spacing:.06em}
+.verdict{display:flex;align-items:flex-start;gap:.6rem;padding:.75rem;border-radius:8px;
+  margin-bottom:.75rem;font-size:.85rem;font-weight:600;line-height:1.5;color:var(--sand)}
+.verdict.pass{background:rgba(90,122,80,.15);border:1px solid rgba(90,122,80,.35)}
+.verdict.warn{background:rgba(200,114,10,.12);border:1px solid rgba(200,114,10,.35)}
+.verdict.fail{background:rgba(166,58,26,.15);border:1px solid rgba(166,58,26,.4)}
+.ci{border-radius:8px;padding:.65rem .75rem;border-left:3px solid rgba(200,114,10,.3);
+  margin-bottom:.45rem;background:rgba(255,255,255,.04)}
+.ci.pass{border-left-color:#5A7A50;background:rgba(90,122,80,.08)}
+.ci.warn{border-left-color:var(--sun1);background:rgba(200,114,10,.08)}
+.ci.fail{border-left-color:#A63A1A;background:rgba(166,58,26,.1)}
+.ci-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.2rem}
+.ci-label{font-weight:700;font-size:.82rem;color:var(--sand)}
+.ci-val{font-size:.75rem;font-weight:700;padding:.1rem .4rem;border-radius:6px}
+.ci-val.pass{background:rgba(90,122,80,.2);color:#7AAA68}
+.ci-val.warn{background:rgba(200,114,10,.2);color:var(--sun2)}
+.ci-val.fail{background:rgba(166,58,26,.2);color:#D06040}
+.ci-note{font-size:.74rem;color:#B8C8B0;line-height:1.5}
+.law-box{margin-top:1rem;font-size:.75rem;color:#B8C8B0;line-height:1.8;
+  background:rgba(255,255,255,.04);border-radius:6px;padding:.75rem 1rem;
+  border:1px solid rgba(200,114,10,.15)}
+.footer-note{text-align:center;font-size:.7rem;color:rgba(184,200,176,.45);margin-top:1.5rem;padding-bottom:2rem}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#0E0A04}
+::-webkit-scrollbar-thumb{background:var(--sun1);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-ico">⚖️</div>
+    <div>
+      <div class="hdr-title">AU Tow Compliance Checker</div>
+      <div class="hdr-sub">Australian towing law · GVM · GCM · Towball mass</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <a href="https://www.paypal.com/ncp/payment/5RU7UR5T7QXNW" target="_blank" class="coffee">☕ Buy me a coffee</a>
+  </div>
+</header>
+
+<div class="disclaimer">
+  ⚠️ <strong>Guide only — not a substitute for a certified weighbridge check.</strong>
+  Always verify actual weights at a weighbridge before towing. Laws vary by state — confirm with your local road authority.
+</div>
+
+<div class="wrap">
+
+  <!-- TRAILER CARD -->
+  <div class="card">
+    <div class="card-title">🚌 Trailer / Caravan</div>
+    <div class="grid2" style="margin-bottom:.75rem">
+      <div>
+        <label>Trailer Type</label>
+        <div class="chip-row" id="chips-type">
+          <span class="chip on" data-v="caravan">Caravan</span>
+          <span class="chip" data-v="camper">Camper Trailer</span>
+          <span class="chip" data-v="boat">Boat Trailer</span>
+          <span class="chip" data-v="horse">Horse Float</span>
+          <span class="chip" data-v="box">Box / Utility</span>
+        </div>
+      </div>
+      <div>
+        <label>Brakes</label>
+        <div class="chip-row" id="chips-brakes">
+          <span class="chip on" data-v="electric">Electric</span>
+          <span class="chip" data-v="overrun">Overrun</span>
+          <span class="chip" data-v="none">None</span>
+        </div>
+        <div style="margin-top:.6rem">
+          <label>Axles</label>
+          <div class="chip-row" id="chips-axles">
+            <span class="chip on" data-v="single">Single</span>
+            <span class="chip" data-v="tandem">Tandem</span>
+            <span class="chip" data-v="triple">Triple</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="div">
+    <div class="grid3">
+      <div>
+        <label>Tare Weight (kg)</label>
+        <input type="number" id="c-tare" placeholder="e.g. 1800" min="0" oninput="calcTrailer()">
+      </div>
+      <div>
+        <label>ATM — Aggregate Trailer Mass (kg)</label>
+        <input type="number" id="c-atm" placeholder="e.g. 2800" min="0" oninput="calcTrailer()">
+      </div>
+      <div>
+        <label>Ball Weight at ATM (kg)</label>
+        <input type="number" id="c-ball" placeholder="e.g. 280" min="0" oninput="calcTrailer()">
+      </div>
+      <div>
+        <label>GTM — Gross Trailer Mass (kg)</label>
+        <input type="number" id="c-gtm" placeholder="Auto-calculated" min="0">
+      </div>
+      <div>
+        <label>Trailer Payload (kg)</label>
+        <input type="number" id="c-tpay" placeholder="Auto-calculated" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- VEHICLE CARD -->
+  <div class="card">
+    <div class="card-title">🚙 Tow Vehicle</div>
+    <div class="grid2" style="margin-bottom:.75rem">
+      <div>
+        <label>Make</label>
+        <input type="text" id="c-vmake" placeholder="e.g. Toyota">
+      </div>
+      <div>
+        <label>Model / Variant</label>
+        <input type="text" id="c-vmodel" placeholder="e.g. LandCruiser 300 GXL">
+      </div>
+    </div>
+    <hr class="div">
+    <div class="grid2" style="margin-bottom:.75rem">
+      <div>
+        <label>Manufacturer Tow Rating (kg)</label>
+        <input type="number" id="c-vtow" placeholder="e.g. 3500" min="0">
+      </div>
+      <div>
+        <label>Max Towball Mass (kg)</label>
+        <input type="number" id="c-vball" placeholder="e.g. 350" min="0">
+      </div>
+      <div>
+        <label>GVM (kg) — from placard</label>
+        <input type="number" id="c-vgvm" placeholder="e.g. 3200" min="0">
+      </div>
+      <div>
+        <label>GCM (kg) — from manual</label>
+        <input type="number" id="c-vgcm" placeholder="e.g. 6700" min="0">
+      </div>
+    </div>
+    <hr class="div">
+    <div class="grid3">
+      <div>
+        <label>Passengers + luggage (kg)</label>
+        <input type="number" id="c-vpax" placeholder="e.g. 400" min="0">
+      </div>
+      <div>
+        <label>Tub / cargo (kg)</label>
+        <input type="number" id="c-vcargo" placeholder="e.g. 50" min="0">
+      </div>
+      <div>
+        <label>Roof rack load (kg)</label>
+        <input type="number" id="c-vroof" placeholder="e.g. 0" min="0">
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" onclick="runCheck()">⚖️ Check This Combo</button>
+  <button class="btn-ghost" onclick="resetAll()">↺ Clear All</button>
+
+  <!-- RESULTS -->
+  <div id="results" class="card" style="margin-top:1.25rem">
+    <div class="card-title">📋 Compliance Result</div>
+    <div class="summary-bar">
+      <div class="sb-item"><div class="sb-num" id="r-pass" style="color:var(--green)">—</div><div class="sb-lbl">Pass</div></div>
+      <div class="sb-item"><div class="sb-num" id="r-warn" style="color:var(--amber)">—</div><div class="sb-lbl">Advisory</div></div>
+      <div class="sb-item"><div class="sb-num" id="r-fail" style="color:var(--red)">—</div><div class="sb-lbl">Fail</div></div>
+    </div>
+    <div id="r-verdict"></div>
+    <div id="r-checks"></div>
+    <div class="law-box">
+      <strong>🇦🇺 Australian Towing Law Notes</strong><br>
+      • Trailer brakes required when GTM exceeds 750 kg in all states<br>
+      • Electric brakes typically required when ATM exceeds 2,000 kg (varies by state)<br>
+      • Ball weight must not exceed manufacturer's max towball mass<br>
+      • Vehicle must not exceed GVM when ball weight is added<br>
+      • Combined vehicle + trailer must not exceed GCM<br>
+      • WA, QLD, SA, VIC may have state-specific variations — check your state RMS/TMR<br>
+      <span style="color:#D06040">⚠️ This tool is a guide only. Always verify with your dealer, state road authority, and a qualified tow installer.</span>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Guide only · Always confirm with your vehicle's placard, manual &amp; your state road authority
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.chip-row').forEach(function(row) {
+    row.querySelectorAll('.chip').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        row.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('on'); });
+        chip.classList.add('on');
+      });
+    });
+  });
+});
+
+function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function chipVal(rowId) {
+  var on = document.querySelector('#' + rowId + ' .chip.on');
+  return on ? on.dataset.v : '';
+}
+
+function calcTrailer() {
+  var atm  = n('c-atm');
+  var tare = n('c-tare');
+  var ball = n('c-ball');
+  if (atm && tare) document.getElementById('c-tpay').value = Math.max(0, atm - tare);
+  if (atm && ball) document.getElementById('c-gtm').value  = Math.max(0, atm - ball);
+}
+
+function resetAll() {
+  document.querySelectorAll('input[type=number], input[type=text]').forEach(function(el) { el.value = ''; });
+  document.querySelectorAll('.chip-row').forEach(function(row) {
+    row.querySelectorAll('.chip').forEach(function(c, i) { c.classList.toggle('on', i === 0); });
+  });
+  document.getElementById('results').style.display = 'none';
+}
+
+function runCheck() {
+  var atm    = n('c-atm');
+  var gtm    = n('c-gtm');
+  var ball   = n('c-ball');
+  var vtow   = n('c-vtow');
+  var vball  = n('c-vball');
+  var vgvm   = n('c-vgvm');
+  var vgcm   = n('c-vgcm');
+  var vpax   = n('c-vpax');
+  var vcargo = n('c-vcargo');
+  var vroof  = n('c-vroof');
+  var brakes = chipVal('chips-brakes');
+  var make   = document.getElementById('c-vmake').value.trim();
+  var model  = document.getElementById('c-vmodel').value.trim();
+
+  if (!atm || !vtow || !vgvm) {
+    alert('Please fill in ATM, Tow Rating and GVM at minimum.');
+    return;
+  }
+
+  var checks = [];
+
+  // 1. Tow capacity
+  checks.push({
+    label: 'Tow Capacity',
+    val:   atm.toLocaleString() + ' / ' + vtow.toLocaleString() + ' kg',
+    s:     atm <= vtow ? 'pass' : 'fail',
+    note:  atm <= vtow
+      ? 'ATM is within the manufacturer tow rating ✓'
+      : 'ATM exceeds tow rating by ' + (atm - vtow).toLocaleString() + ' kg ❌'
+  });
+
+  // 2. Towball mass
+  var ballPct = atm ? (ball / atm) * 100 : 0;
+  var ballS   = (vball && ball > vball) ? 'fail' : (ballPct > 12 || (ballPct < 8 && ball > 0)) ? 'warn' : 'pass';
+  checks.push({
+    label: 'Towball Mass',
+    val:   ball + ' / ' + vball + ' kg',
+    s:     ballS,
+    note:  (vball && ball > vball)
+      ? 'Exceeds max towball mass ❌'
+      : ballPct.toFixed(1) + '% of ATM (ideal range 8–12%)'
+  });
+
+  // 3. GCM
+  if (vgcm) {
+    var estGCM = vgvm * 0.9 + atm;
+    checks.push({
+      label: 'GCM (estimated)',
+      val:   '~' + Math.round(estGCM).toLocaleString() + ' / ' + vgcm.toLocaleString() + ' kg',
+      s:     estGCM <= vgcm ? 'pass' : 'fail',
+      note:  'Based on 90% of GVM + ATM. Verify with actual kerb weight + occupants.'
+    });
+  }
+
+  // 4. Brake requirement
+  var brakesNeeded = gtm > 750 || (!gtm && atm > 750);
+  var brakesOk     = !brakesNeeded || brakes !== 'none';
+  checks.push({
+    label: 'Brake Requirement',
+    val:   brakes.charAt(0).toUpperCase() + brakes.slice(1),
+    s:     brakesOk ? 'pass' : 'fail',
+    note:  brakesNeeded
+      ? (brakesOk ? 'Brakes fitted — required for GTM > 750 kg ✓' : 'Brakes required when GTM exceeds 750 kg ❌')
+      : 'GTM ≤ 750 kg — brakes not mandatory'
+  });
+
+  // 5. Ball weight %
+  checks.push({
+    label: 'Ball Weight %',
+    val:   ballPct.toFixed(1) + '%',
+    s:     (ballPct >= 8 && ballPct <= 12) ? 'pass' : 'warn',
+    note:  'Ideal 8–12% of ATM for stable towing (NTC guideline). Outside range increases sway risk.'
+  });
+
+  // 6. Tow/GVM ratio
+  var ratio = (atm && vgvm) ? atm / vgvm : 0;
+  checks.push({
+    label: 'Trailer / GVM Ratio',
+    val:   ratio ? ratio.toFixed(2) + ':1' : 'N/A',
+    s:     ratio > 1.5 ? 'warn' : 'pass',
+    note:  ratio > 1.5
+      ? 'Trailer mass exceeds 1.5× vehicle GVM — consider weight distribution hitch'
+      : 'Ratio within comfortable range'
+  });
+
+  // 7. Vehicle load estimate
+  var vload = ball + vpax + vcargo + vroof;
+  checks.push({
+    label: 'Estimated Vehicle Load',
+    val:   Math.round(vload).toLocaleString() + ' kg',
+    s:     vload < 800 ? 'pass' : 'warn',
+    note:  'Ball weight + passengers + cargo + roof rack. Compare against your vehicle payload sticker.'
+  });
+
+  var fails = checks.filter(function(c) { return c.s === 'fail'; });
+  var warns = checks.filter(function(c) { return c.s === 'warn'; });
+  var passes = checks.filter(function(c) { return c.s === 'pass'; });
+  var vs = fails.length ? 'fail' : warns.length ? 'warn' : 'pass';
+  var vt = fails.length
+    ? fails.length + ' compliance issue' + (fails.length > 1 ? 's' : '') + ' — this combination may not be road legal.'
+    : warns.length
+    ? warns.length + ' advisory item' + (warns.length > 1 ? 's' : '') + ' — review before towing.'
+    : 'All checks passed — combination appears compliant. Verify with your dealer.';
+
+  var icon   = vs === 'pass' ? '✅' : vs === 'warn' ? '⚠️' : '❌';
+  var vLabel = [make, model].filter(Boolean).join(' ') || 'Your Vehicle';
+
+  document.getElementById('r-pass').textContent = passes.length;
+  document.getElementById('r-warn').textContent = warns.length;
+  document.getElementById('r-fail').textContent = fails.length;
+
+  document.getElementById('r-verdict').innerHTML =
+    '<div class="verdict ' + vs + '">' +
+      '<span style="font-size:1.3rem">' + icon + '</span>' +
+      '<span><strong>' + vLabel + '</strong> — ' + vt + '</span>' +
+    '</div>';
+
+  document.getElementById('r-checks').innerHTML = checks.map(function(c) {
+    return '<div class="ci ' + c.s + '">' +
+      '<div class="ci-top">' +
+        '<span class="ci-label">' + c.label + '</span>' +
+        '<span class="ci-val ' + c.s + '">' + c.val + '</span>' +
+      '</div>' +
+      '<div class="ci-note">' + c.note + '</div>' +
+    '</div>';
+  }).join('');
+
+  var r = document.getElementById('results');
+  r.style.display = 'block';
+  r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>
