@@ -493,13 +493,18 @@ async function cqFetch(params) {
   const qs = new URLSearchParams({...params, callback: 'cb'}).toString();
   const directUrl = CQ_BASE + '?' + qs;
 
-  // Try allorigins CORS proxy
+  // Try allorigins CORS proxy — strip callback param so CarQuery returns plain JSON
   try {
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(directUrl.replace('&callback=cb',''));
-    const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
+    const cleanQs = new URLSearchParams(params).toString(); // no callback param
+    const targetUrl = CQ_BASE + '?' + cleanQs;
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+    const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(10000)});
     if (r.ok) {
       const wrapper = await r.json();
-      const data = JSON.parse(wrapper.contents);
+      let text = wrapper.contents || '';
+      // Strip JSONP wrapper if present: cb({...}) or callback({...})
+      text = text.replace(/^[a-zA-Z_$][a-zA-Z0-9_$]*\s*\(/, '').replace(/\)\s*;?\s*$/, '');
+      const data = JSON.parse(text);
       cache[cacheKey] = data;
       return data;
     }
