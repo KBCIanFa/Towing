@@ -224,6 +224,10 @@ input::placeholder{color:rgba(184,200,176,.35)}
         <label>Roof rack load (kg)</label>
         <input type="number" id="c-vroof" placeholder="e.g. 0" min="0">
       </div>
+      <div>
+        <label>Vehicle Payload Capacity (kg)</label>
+        <input type="number" id="c-vpayload" placeholder="e.g. 690 — from sticker" min="0">
+      </div>
     </div>
   </div>
 
@@ -378,13 +382,25 @@ function runCheck() {
       : 'Ratio within comfortable range'
   });
 
-  // 7. Vehicle load estimate
+  var vpayload = n('c-vpayload');
+
+  // 7. Vehicle load + remaining payload
   var vload = ball + vpax + vcargo + vroof;
+  var remaining = vpayload ? vpayload - vload : null;
+  var loadS = vpayload
+    ? (remaining < 0 ? 'fail' : remaining < 50 ? 'warn' : 'pass')
+    : (vload < 800 ? 'pass' : 'warn');
   checks.push({
-    label: 'Estimated Vehicle Load',
-    val:   Math.round(vload).toLocaleString() + ' kg',
-    s:     vload < 800 ? 'pass' : 'warn',
-    note:  'Ball weight + passengers + cargo + roof rack. Compare against your vehicle payload sticker.'
+    label: 'Vehicle Payload',
+    val:   vpayload
+      ? Math.round(vload).toLocaleString() + ' used / ' + vpayload.toLocaleString() + ' kg capacity'
+      : Math.round(vload).toLocaleString() + ' kg (no capacity entered)',
+    s:     loadS,
+    note:  vpayload
+      ? (remaining < 0
+          ? 'Over payload by ' + Math.abs(Math.round(remaining)).toLocaleString() + ' kg ❌ — exceeds payload sticker'
+          : Math.round(remaining).toLocaleString() + ' kg remaining payload' + (remaining < 50 ? ' — nearly at limit ⚠️' : ' ✓'))
+      : 'Enter Vehicle Payload Capacity above for a remaining payload figure. Compare load against your payload sticker.'
   });
 
   var fails = checks.filter(function(c) { return c.s === 'fail'; });
