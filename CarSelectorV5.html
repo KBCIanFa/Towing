@@ -243,6 +243,68 @@ input::placeholder{color:rgba(184,200,176,.35)}
     </div>
   </div>
 
+  <!-- ADVANCED: AXLE LOADS -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-title" onclick="toggleAdvanced()" style="cursor:pointer;user-select:none;justify-content:space-between;display:flex;align-items:center">
+      <span>📐 Axle Load Estimator <span style="font-size:.72rem;font-weight:600;color:var(--smoke);letter-spacing:.04em;text-transform:uppercase"> — optional</span></span>
+      <span id="adv-arrow" style="font-size:.85rem;color:var(--smoke);transition:transform .2s">▼</span>
+    </div>
+    <div id="adv-body" style="display:none">
+      <p style="font-size:.76rem;color:var(--smoke);line-height:1.6;margin-bottom:1rem">
+        Estimates front and rear axle loads under tow. Requires wheelbase and hitch overhang to calculate how towball mass transfers through the vehicle. Find axle ratings on your compliance placard.
+      </p>
+      <div class="grid2" style="margin-bottom:.75rem">
+        <div>
+          <label>Front Axle Rating — GAxleR (kg)</label>
+          <input type="number" id="a-front-rating" placeholder="e.g. 1600 — from placard" min="0">
+        </div>
+        <div>
+          <label>Rear Axle Rating — GAxleR (kg)</label>
+          <input type="number" id="a-rear-rating" placeholder="e.g. 1900 — from placard" min="0">
+        </div>
+        <div>
+          <label>Kerb Front Axle Split (%)</label>
+          <input type="number" id="a-front-split" placeholder="e.g. 55 — from spec sheet" min="1" max="99">
+        </div>
+        <div>
+          <label>Kerb Rear Axle Split (%)</label>
+          <input type="number" id="a-rear-split" placeholder="Auto from front %" min="1" max="99">
+        </div>
+        <div>
+          <label>Wheelbase (mm)</label>
+          <input type="number" id="a-wheelbase" placeholder="e.g. 3270" min="0" oninput="autoRearSplit()">
+        </div>
+        <div>
+          <label>Hitch Overhang — rear axle to ball (mm)</label>
+          <input type="number" id="a-overhang" placeholder="e.g. 500" min="0">
+        </div>
+      </div>
+      <button class="btn" style="margin-top:0" onclick="calcAxles()">📐 Estimate Axle Loads</button>
+      <div id="axle-result" style="display:none;margin-top:1rem">
+        <hr class="div">
+        <div class="grid2" style="gap:.6rem;margin-top:.75rem">
+          <div class="ci" id="axle-front-box">
+            <div class="ci-top">
+              <span class="ci-label">Front Axle Load</span>
+              <span class="ci-val" id="axle-front-val">—</span>
+            </div>
+            <div class="ci-note" id="axle-front-note"></div>
+          </div>
+          <div class="ci" id="axle-rear-box">
+            <div class="ci-top">
+              <span class="ci-label">Rear Axle Load</span>
+              <span class="ci-val" id="axle-rear-val">—</span>
+            </div>
+            <div class="ci-note" id="axle-rear-note"></div>
+          </div>
+        </div>
+        <div class="law-box" style="margin-top:.75rem;font-size:.73rem">
+          ⚠️ Axle load estimates assume uniform load distribution within each zone. Actual loads depend on exact seating positions, cargo placement and suspension state. Always verify with a weighbridge per axle.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <button class="btn" onclick="runCheck()">⚖️ Check This Combo</button>
   <button class="btn-ghost" onclick="resetAll()">↺ Clear All</button>
 
@@ -275,8 +337,98 @@ input::placeholder{color:rgba(184,200,176,.35)}
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.chip-row').forEach(function(row) {
+function toggleAdvanced() {
+  var body  = document.getElementById('adv-body');
+  var arrow = document.getElementById('adv-arrow');
+  var open  = body.style.display === 'block';
+  body.style.display  = open ? 'none' : 'block';
+  arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function autoRearSplit() {
+  var front = parseFloat(document.getElementById('a-front-split').value);
+  if (front > 0 && front < 100) {
+    document.getElementById('a-rear-split').value = (100 - front).toFixed(1);
+  }
+}
+
+function calcAxles() {
+  var vactual    = n('c-vactual');
+  var vkerb      = n('c-vkerb');
+  var baseWeight = vactual || vkerb;
+  var vpax       = n('c-vpax');
+  var vcargo     = n('c-vcargo');
+  var vroof      = n('c-vroof');
+  var ball       = n('c-ball');
+  var frontSplit = n('a-front-split') / 100;
+  var rearSplit  = n('a-rear-split')  / 100;
+  var wheelbase  = n('a-wheelbase');
+  var overhang   = n('a-overhang');
+  var frontRating= n('a-front-rating');
+  var rearRating = n('a-rear-rating');
+
+  if (!baseWeight) {
+    alert('Enter Kerb Weight or Actual Vehicle Weight first.');
+    return;
+  }
+  if (!frontSplit || !rearSplit) {
+    alert('Enter front/rear axle split (e.g. 55 / 45).');
+    return;
+  }
+  if (!wheelbase || !overhang) {
+    alert('Enter Wheelbase and Hitch Overhang to calculate axle loads.');
+    return;
+  }
+
+  // Base axle loads from kerb weight
+  var kerbFront = baseWeight * frontSplit;
+  var kerbRear  = baseWeight * rearSplit;
+
+  // Passengers + luggage load — assume cabin, biased 70% front / 30% rear
+  var paxFront = vpax * 0.70;
+  var paxRear  = vpax * 0.30;
+
+  // Tub/cargo — assume entirely on rear axle (tray/boot)
+  var cargoRear = vcargo;
+
+  // Roof rack — split evenly across both axles (central roof position)
+  var roofFront = vroof * 0.50;
+  var roofRear  = vroof * 0.50;
+
+  // Towball mass effect:
+  // Ball sits 'overhang' mm behind rear axle.
+  // Rear axle gains: ball * (1 + overhang/wheelbase)
+  // Front axle loses: ball * (overhang/wheelbase)
+  var ballRearAdd  =  ball * (1 + overhang / wheelbase);
+  var ballFrontSub =  ball * (overhang / wheelbase);
+
+  var frontTotal = kerbFront + paxFront + roofFront - ballFrontSub;
+  var rearTotal  = kerbRear  + paxRear  + cargoRear + roofRear + ballRearAdd;
+
+  function setAxle(boxId, valId, noteId, load, rating, axle) {
+    var s = rating ? (load > rating ? 'fail' : load > rating * 0.95 ? 'warn' : 'pass') : 'warn';
+    var box = document.getElementById(boxId);
+    var val = document.getElementById(valId);
+    var note= document.getElementById(noteId);
+    box.className = 'ci ' + s;
+    val.className = 'ci-val ' + s;
+    val.textContent = Math.round(load).toLocaleString() + (rating ? ' / ' + rating.toLocaleString() + ' kg' : ' kg');
+    note.textContent = rating
+      ? (load > rating
+          ? axle + ' axle over rated limit by ' + Math.round(load - rating).toLocaleString() + ' kg ❌'
+          : Math.round(rating - load).toLocaleString() + ' kg remaining on ' + axle + ' axle rating'
+            + (load > rating * 0.95 ? ' — within 5% of limit ⚠️' : ' ✓'))
+      : 'Enter ' + axle + ' axle rating from placard for a pass/fail result.';
+  }
+
+  setAxle('axle-front-box','axle-front-val','axle-front-note', frontTotal, frontRating, 'front');
+  setAxle('axle-rear-box', 'axle-rear-val', 'axle-rear-note',  rearTotal,  rearRating,  'rear');
+
+  document.getElementById('axle-result').style.display = 'block';
+}
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.chip-row').forEach(function(row) {
     row.querySelectorAll('.chip').forEach(function(chip) {
       chip.addEventListener('click', function() {
         row.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('on'); });
@@ -306,6 +458,9 @@ function resetAll() {
     row.querySelectorAll('.chip').forEach(function(c, i) { c.classList.toggle('on', i === 0); });
   });
   document.getElementById('results').style.display = 'none';
+  document.getElementById('axle-result').style.display = 'none';
+  document.getElementById('adv-body').style.display = 'none';
+  document.getElementById('adv-arrow').style.transform = 'rotate(0deg)';
 }
 
 function runCheck() {
