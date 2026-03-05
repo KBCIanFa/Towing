@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AU Car Selector V5 — Live Lookup</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── Australian Sandy Beach · Dune · Sea Haze ── */
+  /* Warm sand base — sun-bleached dunes at midday */
+  --bg:       #F5EDD8;   /* bleached beach sand */
+  --s1:       #EDE0C4;   /* dry dune shadow */
+  --s2:       #E4D4AA;   /* wet sand low-tide */
+  --s3:       #D8C490;   /* packed dune crest */
+  --border:   #C8AA70;   /* tideline mark */
+  --border2:  #DCC888;   /* soft sand ridge */
+
+  --text:     #2C1E08;   /* dark driftwood */
+  --muted:    #8A6A3A;   /* kelp / dry sand grass */
+
+  /* Sea & sky haze — coastal blue-greens */
+  --accent:   #2E7A8C;   /* deep coastal water */
+  --accent2:  #4AACCC;   /* shallow reef turquoise */
+
+  /* Sunset tones — warm coral/orange for CTAs */
+  --sunset1:  #D05A28;   /* burnt coral */
+  --sunset2:  #E88030;   /* warm amber dusk */
+  --sunset3:  #B84018;   /* deep sienna */
+
+  /* Coastal greens — sea grass, pandanus */
+  --green:    #4A8050;   /* pandanus green */
+  --green2:   #6AAA60;   /* sea grass bright */
+
+  /* Alerts */
+  --amber:    #C87820;   /* sand amber */
+  --red:      #C03820;   /* coral red */
+  --gold:     #C89020;   /* warm gold */
+  --teal:     #1A8898;   /* deep reef */
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;background-image:radial-gradient(ellipse 120% 80% at 100% 0%,rgba(74,172,204,.08) 0%,transparent 55%),radial-gradient(ellipse 80% 60% at 0% 100%,rgba(208,90,40,.06) 0%,transparent 50%);}
+
+/* ─── HEADER ─── */
+.hdr{background:rgba(240,228,200,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:300;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem}
+.hdr-logo{display:flex;align-items:center;gap:.6rem}
+.hdr-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--sunset1),var(--sunset2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.hdr-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;color:var(--text)}
+.hdr-title span{color:var(--sunset2)}
+.hdr-pills{display:flex;gap:.5rem;align-items:center}
+.pill{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.22rem .6rem;border-radius:20px;border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:.3rem;background:rgba(255,255,255,.5)}
+.pill.live{color:var(--green);border-color:rgba(123,170,96,.3);background:rgba(123,170,96,.07)}
+.pill.warn{color:var(--amber);border-color:rgba(232,152,40,.3);background:rgba(232,152,40,.07)}
+.pill.off{color:var(--red);border-color:rgba(208,72,40,.3);background:rgba(208,72,40,.07)}
+.blink{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ─── HERO ─── */
+.hero{padding:2.5rem 1.5rem 2rem;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(74,172,204,.1) 0%,rgba(208,90,40,.05) 60%,transparent 100%);border-bottom:1px solid var(--border2)}
+.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.6rem,4vw,2.8rem);letter-spacing:-.03em;line-height:1.1;margin-bottom:.6rem}
+.hero h1 span{color:var(--sunset2)}
+.hero p{color:var(--muted);font-size:.93rem;max-width:480px;margin:0 auto .75rem;font-weight:400}
+.api-explain{display:inline-flex;align-items:center;gap:.5rem;font-size:.72rem;color:var(--muted);background:rgba(255,255,255,.6);border:1px solid var(--border);border-radius:6px;padding:.3rem .8rem}
+.api-explain strong{color:var(--sunset2)}
+
+/* ─── TABS ─── */
+.tabs{display:flex;border-bottom:2px solid var(--border);background:var(--s2);padding:0 1.5rem;overflow-x:auto}
+.tab{padding:.75rem 1.1rem;font-size:.83rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:.35rem}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--sunset2);border-bottom-color:var(--sunset1)}
+
+/* ─── LAYOUT ─── */
+.layout{display:grid;grid-template-columns:300px 1fr;max-width:1400px;margin:0 auto}
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+.sidebar{border-right:1px solid var(--border);background:var(--s2);padding:1.25rem;position:sticky;top:58px;max-height:calc(100vh - 58px);overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.main{padding:1.5rem;background:var(--bg)}
+
+/* ─── SIDEBAR SECTIONS ─── */
+.sec{padding-bottom:1.1rem;margin-bottom:1.1rem;border-bottom:1px solid var(--border)}
+.sec:last-of-type{border-bottom:none;margin-bottom:.5rem}
+.sec-title{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* FORM */
+.fl{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:.3rem;margin-top:.65rem}
+.fl:first-child{margin-top:0}
+select,input[type=number],input[type=text]{width:100%;background:rgba(255,255,255,.7);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.45rem .7rem;font-size:.85rem;font-family:'Nunito',sans-serif;outline:none;transition:border-color .15s;appearance:none;-webkit-appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%238A6A3A' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .55rem center;padding-right:1.8rem}
+select:focus,input:focus{border-color:var(--sunset1)}
+select:disabled{opacity:.4;cursor:not-allowed}
+
+.range-row{margin-top:.2rem}
+input[type=range]{width:100%;accent-color:var(--sunset1);background:none;border:none;padding:0;cursor:pointer;height:18px}
+.range-meta{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:.15rem}
+.range-meta strong{color:var(--sunset2)}
+
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.3rem}
+.chip{font-size:.72rem;font-weight:600;padding:.22rem .62rem;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;user-select:none;color:var(--muted)}
+.chip:hover{border-color:var(--accent);color:var(--text)}
+.chip.on{background:rgba(122,158,184,.12);border-color:var(--accent);color:var(--accent)}
+
+/* BUTTONS */
+.btn{width:100%;padding:.68rem;background:var(--sunset1);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.45rem}
+.btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 18px rgba(122,158,184,.25)}
+.btn:active{transform:none}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{width:100%;padding:.5rem;background:rgba(255,255,255,.4);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;margin-top:.45rem}
+.btn-ghost:hover{border-color:var(--muted);color:var(--text)}
+
+/* ─── PANEL VIEWS ─── */
+.pview{display:none}.pview.active{display:block}
+
+/* ─── RESULTS ─── */
+.rh{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;margin-bottom:1.1rem}
+.rc{font-size:.78rem;color:var(--muted)}.rc strong{color:var(--text);font-size:.95rem}
+.sort-row{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+.sl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.sc{font-size:.68rem;font-weight:700;padding:.18rem .6rem;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.6);color:var(--muted);cursor:pointer;transition:all .15s}
+.sc.active{background:rgba(122,158,184,.1);border-color:var(--accent);color:var(--accent)}
+
+/* ─── VEHICLE CARD ─── */
+.vgrid{display:flex;flex-direction:column;gap:.9rem}
+.vcard{background:rgba(255,255,255,.75);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s,box-shadow .2s;animation:fu .3s ease both;backdrop-filter:blur(4px)}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.vcard:hover{border-color:var(--accent);box-shadow:0 6px 24px rgba(46,122,140,.18)}
+
+.vc-head{display:grid;grid-template-columns:1fr auto;gap:.8rem;padding:1rem 1.2rem .85rem;border-bottom:1px solid var(--border);align-items:start}
+.vc-source{display:inline-flex;align-items:center;gap:.3rem;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;border-radius:4px;margin-bottom:.3rem}
+.src-live{background:rgba(122,158,184,.12);color:var(--accent);border:1px solid rgba(122,158,184,.25)}
+.src-local{background:rgba(123,170,96,.1);color:var(--green);border:1px solid rgba(123,170,96,.2)}
+.src-partial{background:rgba(232,152,40,.1);color:var(--amber);border:1px solid rgba(232,152,40,.2)}
+.vmk{font-size:.66rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--sunset2);margin-bottom:.15rem}
+.vn{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;letter-spacing:-.02em;line-height:1.1}
+.vv{font-size:.78rem;color:var(--muted);margin-top:.2rem}
+
+
+
+
+
+/* SPECS GRID */
+.vspc{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));padding:.7rem 1.2rem;gap:0;border-bottom:1px solid var(--border);background:rgba(245,237,216,.4)}
+.sp{padding:.4rem .4rem .4rem 0}
+.spk{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.18rem}
+.spv{font-size:.95rem;font-weight:700;color:var(--text)}
+.spv.hi{color:var(--sunset2)}
+.spv.ok{color:var(--green)}
+.spv.warn{color:var(--amber)}
+.spv.na{color:var(--muted);font-size:.8rem;font-weight:400}
+.spv.sm{font-size:.8rem}
+
+/* BAR */
+.vbar{padding:.55rem 1.2rem;border-bottom:1px solid var(--border2)}
+.vbl{display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.35rem;font-weight:600}
+.vbt{height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.vbf{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* FOOTER */
+.vcf{padding:.6rem 1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem;background:rgba(245,237,216,.5)}
+.vtags{display:flex;flex-wrap:wrap;gap:.3rem}
+.vtag{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:4px;border:1px solid}
+.t-blue{color:var(--accent);border-color:rgba(122,158,184,.3);background:rgba(122,158,184,.08)}
+.t-green{color:var(--green);border-color:rgba(123,170,96,.3);background:rgba(123,170,96,.08)}
+.t-amber{color:var(--amber);border-color:rgba(232,152,40,.3);background:rgba(232,152,40,.08)}
+.t-red{color:var(--red);border-color:rgba(208,72,40,.3);background:rgba(208,72,40,.08)}
+.xbtn{font-size:.72rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,.5);border:1px solid var(--border);border-radius:6px;padding:.22rem .7rem;cursor:pointer;transition:all .15s;font-family:'Nunito',sans-serif}
+.xbtn:hover{color:var(--text);border-color:var(--muted)}
+
+/* EXPANDED */
+.vdet{display:none;background:rgba(225,210,175,.35);border-top:1px solid var(--border);padding:1.1rem 1.2rem}
+.vdet.open{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.1rem}
+.db h4{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--sunset2);margin-bottom:.65rem;padding-bottom:.4rem;border-bottom:1px solid var(--border2)}
+.dr{display:flex;justify-content:space-between;align-items:baseline;padding:.24rem 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.81rem}
+.dr:last-child{border-bottom:none}
+.dk{color:var(--muted);font-size:.74rem}
+.dv{font-weight:700}
+.dv.ok{color:var(--green2)}.dv.warn{color:var(--amber)}.dv.bad{color:var(--red)}
+
+/* ─── LIVE LOOKUP PANEL ─── */
+.ll-wrap{background:rgba(255,255,255,.7);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.ll-wrap h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:.5rem;color:var(--sunset2)}
+.ll-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.6rem;align-items:end}
+@media(max-width:600px){.ll-row{grid-template-columns:1fr 1fr}}
+.ll-results{margin-top:1rem}
+
+/* ─── CHECKER ─── */
+.ck-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:680px){.ck-grid{grid-template-columns:1fr}}
+.ck-card{background:rgba(255,255,255,.7);border:1px solid var(--border);border-radius:12px;padding:1.1rem}
+.ck-card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:.9rem;padding-bottom:.65rem;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:.45rem;color:var(--sunset2)}
+.cf{margin-bottom:.65rem}
+.cf label{display:block;font-size:.74rem;font-weight:600;color:var(--muted);margin-bottom:.28rem}
+.ck-result{grid-column:1/-1;background:rgba(255,255,255,.7);border:1px solid var(--border);border-radius:12px;padding:1.25rem;display:none}
+.ck-result.show{display:block}
+.ck-result h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:1rem;color:var(--sunset2)}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.65rem;margin-bottom:.9rem}
+.ci{background:rgba(245,237,216,.6);border-radius:8px;padding:.75rem;border-left:3px solid var(--border)}
+.ci.pass{border-left-color:var(--green)}.ci.fail{border-left-color:var(--red)}.ci.warn{border-left-color:var(--amber)}
+.cl{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.3rem;font-weight:700}
+.cv{font-size:1rem;font-weight:700}
+.cv.pass{color:var(--green)}.cv.fail{color:var(--red)}.cv.warn{color:var(--amber)}
+.cn{font-size:.7rem;color:var(--muted);margin-top:.2rem;line-height:1.4}
+.verdict{border-radius:8px;padding:.9rem 1.1rem;font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:.65rem;margin-top:.75rem}
+.verdict.pass{background:rgba(123,170,96,.08);border:1px solid rgba(123,170,96,.25);color:var(--green)}
+.verdict.fail{background:rgba(208,72,40,.08);border:1px solid rgba(208,72,40,.25);color:var(--red)}
+.verdict.warn{background:rgba(232,152,40,.08);border:1px solid rgba(232,152,40,.25);color:var(--amber)}
+.law-notes{margin-top:.9rem;font-size:.76rem;color:var(--muted);line-height:1.8;background:rgba(230,215,180,.4);border-radius:6px;padding:.75rem 1rem}
+.law-notes strong{color:var(--text)}
+
+/* ─── EMPTY / LOADING ─── */
+.empty{text-align:center;padding:4rem 1.5rem;color:var(--muted);background:rgba(255,255,255,.3);border-radius:12px}
+.empty-ico{font-size:3rem;margin-bottom:.75rem;opacity:.45}
+.empty h3{font-family:'Syne',sans-serif;font-size:1.2rem;color:var(--text);margin-bottom:.4rem}
+.skel{background:rgba(255,255,255,.5);border:1px solid var(--border);border-radius:12px;height:150px;position:relative;overflow:hidden;margin-bottom:.9rem}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shim 1.4s infinite}
+@keyframes shim{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+/* API STATUS TABLE */
+.api-table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:.5rem}
+.api-table th{text-align:left;color:var(--muted);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;padding:.4rem .6rem;border-bottom:2px solid var(--border)}
+.api-table td{padding:.5rem .6rem;border-bottom:1px solid var(--border2)}
+.api-table tr:last-child td{border-bottom:none}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--s3)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-icon">🚗</div>
+    <span class="hdr-title">AU Car <span>Selector</span> <span style="font-size:.7rem;color:var(--muted);font-weight:400">V5</span></span>
+  </div>
+  <div class="hdr-pills">
+    <span class="pill" id="cq-pill"><span class="blink"></span> CarQuery…</span>
+    <span class="pill" style="color:var(--green);border-color:rgba(123,170,96,.3);background:rgba(123,170,96,.07)">🇦🇺 AU Data ✓</span>
+    <a href="https://www.paypal.com/ncp/payment/5RU7UR5T7QXNW" target="_blank" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.22rem .75rem;border-radius:20px;border:1px solid rgba(208,90,40,.4);background:rgba(208,90,40,.12);color:var(--sunset1);text-decoration:none;transition:all .2s;font-family:'Nunito',sans-serif" onmouseover="this.style.background='rgba(208,90,40,.22)'" onmouseout="this.style.background='rgba(208,90,40,.12)'">☕ Buy me a coffee</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Australian Vehicle Finder<br><span>with Live API Lookups</span></h1>
+  <p>Manufacturer-verified AU specs · CarQuery live engine lookups · Specs updated March 2026</p>
+  <div class="api-explain">
+    <strong>CarQuery</strong> → Live Makes/Models/Engine specs &nbsp;|&nbsp;
+    <strong>AU Dataset</strong> → Towing · GVM · GCM · Payload · Pricing
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('finder',this)">🔍 Vehicle Finder</button>
+  <button class="tab" onclick="switchTab('lookup',this)">🌐 Live Vehicle Lookup</button>
+  <button class="tab" onclick="switchTab('checker',this)">⚖️ Tow Compliance</button>
+  <button class="tab" onclick="switchTab('apistatus',this)">📡 API Status</button>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sec">
+      <div class="sec-title">Make &amp; Model</div>
+      <label class="fl">Make <span id="make-loading" style="color:var(--accent);display:none">⟳</span></label>
+      <select id="f-make" onchange="onMakeChange('f-make','f-model')">
+        <option value="">Loading makes…</option>
+      </select>
+      <label class="fl">Model</label>
+      <select id="f-model" disabled onchange="onModelChange()">
+        <option value="">Select make first</option>
+      </select>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Towing &amp; Capability</div>
+      <label class="fl">Min. Tow Rating</label>
+      <select id="f-tow">
+        <option value="0">Any</option>
+        <option value="2500">2,500kg+</option>
+        <option value="3000">3,000kg+</option>
+        <option value="3500" selected>3,500kg+</option>
+        <option value="4000">4,000kg+</option>
+      </select>
+      <label class="fl">Min. Payload</label>
+      <select id="f-payload">
+        <option value="0">Any</option>
+        <option value="500">500kg+</option>
+        <option value="700">700kg+</option>
+        <option value="900">900kg+</option>
+        <option value="1000">1,000kg+</option>
+      </select>
+      <label class="fl">Min. GVM</label>
+      <select id="f-gvm">
+        <option value="0">Any</option>
+        <option value="2800">2,800kg+</option>
+        <option value="3000">3,000kg+</option>
+        <option value="3200">3,200kg+</option>
+        <option value="3500">3,500kg+</option>
+      </select>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Use Case</div>
+      <select id="f-use">
+        <option value="">Any</option>
+        <option value="towing">Towing</option>
+        <option value="offroad">Off-Road</option>
+        <option value="family">Family</option>
+        <option value="tradie">Tradie</option>
+      </select>
+      <label class="fl">Year From</label>
+      <select id="f-year">
+        <option value="2022" selected>2022+</option>
+        <option value="2023">2023+</option>
+        <option value="2024">2024+</option>
+        <option value="2025">2025+</option>
+      </select>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Safety &amp; Efficiency</div>
+      <label class="fl">Min. Seats</label>
+      <select id="f-seats"><option value="2">2+</option><option value="4">4+</option><option value="5" selected>5+</option><option value="7">7+</option></select>
+      <label class="fl">ANCAP Rating</label>
+      <select id="f-ancap"><option value="0">Any</option><option value="3">3+★</option><option value="4">4+★</option><option value="5">5★</option></select>
+      <label class="fl">Max Fuel (L/100km)</label>
+      <select id="f-fuse"><option value="99">Any</option><option value="12">≤12</option><option value="10">≤10</option><option value="8">≤8</option></select>
+    </div>
+
+    <button class="btn" id="sbtn" onclick="runSearch()">🔍 Find Vehicles</button>
+    <button class="btn-ghost" onclick="resetAll()">↺ Reset Filters</button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ── FINDER TAB ── -->
+    <div class="pview active" id="tab-finder">
+      <div id="results">
+        <div class="empty"><div class="empty-ico">🚙</div><h3>Set your filters &amp; search</h3><p>Use the sidebar to configure requirements, then click <strong>Find Vehicles</strong>.</p></div>
+      </div>
+    </div>
+
+    <!-- ── LIVE LOOKUP TAB ── -->
+    <div class="pview" id="tab-lookup">
+      <div class="ll-wrap">
+        <h3>🌐 Live CarQuery Lookup <span class="vc-source src-live" style="margin-left:.5rem">LIVE API</span></h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Search any make/model globally via CarQuery API. Results show engine, weight, body, fuel &amp; dimensions — AU towing specs overlaid where available.</p>
+        <div class="ll-row">
+          <div>
+            <label class="fl">Make</label>
+            <select id="ll-make" onchange="onMakeChange('ll-make','ll-model')">
+              <option value="">Select Make</option>
+            </select>
+          </div>
+          <div>
+            <label class="fl">Model</label>
+            <select id="ll-model" disabled>
+              <option value="">Select Make First</option>
+            </select>
+          </div>
+          <div>
+            <label class="fl">Year (optional)</label>
+            <select id="ll-year">
+              <option value="">Any Year</option>
+              <option value="2025">2025</option>
+              <option value="2024" selected>2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+              <option value="2020">2020</option>
+              <option value="2019">2019</option>
+              <option value="2018">2018</option>
+            </select>
+          </div>
+          <div>
+            <label class="fl">&nbsp;</label>
+            <button class="btn" style="width:auto;padding:.45rem 1.1rem" onclick="runLiveLookup()">Search</button>
+          </div>
+        </div>
+        <div class="ll-results" id="ll-results">
+          <div class="empty" style="padding:2rem"><div class="empty-ico" style="font-size:2rem">🌐</div><p>Select a make and model to fetch live data.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CHECKER TAB ── -->
+    <div class="pview" id="tab-checker">
+      <div style="font-size:.78rem;color:var(--amber);background:rgba(232,152,40,.07);border:1px solid rgba(232,152,40,.2);border-radius:8px;padding:.7rem 1rem;margin-bottom:1.1rem;display:flex;gap:.5rem">
+        ⚠️ <span>Enter your caravan/trailer details and vehicle specs below to check AU towing compliance. Fields auto-calculate where possible.</span>
+      </div>
+      <div class="ck-grid">
+        <div class="ck-card">
+          <h3>🚌 Trailer / Caravan</h3>
+          <div class="cf"><label>Trailer Type</label><select id="c-type"><option value="caravan">Caravan</option><option value="camper">Camper Trailer</option><option value="boat">Boat Trailer</option><option value="horse">Horse Float</option><option value="box">Box / Utility</option></select></div>
+          <div class="cf"><label>Tare Weight (kg)</label><input type="number" id="c-tare" placeholder="e.g. 1800" oninput="calcTrailer()"></div>
+          <div class="cf"><label>ATM — Aggregate Trailer Mass (kg)</label><input type="number" id="c-atm" placeholder="e.g. 2800" oninput="calcTrailer()"></div>
+          <div class="cf"><label>GTM — Gross Trailer Mass (kg) <span style="font-size:.68rem;color:var(--muted)">(≈ ATM − ball wt)</span></label><input type="number" id="c-gtm" placeholder="auto-calc" id="c-gtm"></div>
+          <div class="cf"><label>Ball Weight at ATM (kg)</label><input type="number" id="c-ball" placeholder="e.g. 180" oninput="calcTrailer()"></div>
+          <div class="cf"><label>Trailer Payload (kg) <span style="font-size:.68rem;color:var(--muted)">ATM − Tare</span></label><input type="number" id="c-tpay" readonly placeholder="auto-calc" style="background:var(--s2);color:var(--muted)"></div>
+          <div class="cf"><label>Brakes</label><select id="c-brakes"><option value="electric">Electric</option><option value="overrun">Overrun</option><option value="none">None</option></select></div>
+          <div class="cf"><label>Axles</label><select id="c-axles"><option value="1">Single</option><option value="2">Tandem</option><option value="3">Triple</option></select></div>
+        </div>
+        <div class="ck-card">
+          <h3>🚙 Tow Vehicle</h3>
+          <div class="cf"><label>Make</label><select id="c-make" onchange="onCheckerMake()"><option value="">Select Make</option></select></div>
+          <div class="cf"><label>Model</label><select id="c-model" disabled onchange="autofillFromDB()"><option value="">Select Make First</option></select></div>
+          <div class="cf"><label>Manufacturer Tow Rating (kg)</label><input type="number" id="c-vtow" placeholder="e.g. 3500"></div>
+          <div class="cf"><label>Max Towball Mass (kg)</label><input type="number" id="c-vball" placeholder="e.g. 350"></div>
+          <div class="cf"><label>GVM (kg) — from placard</label><input type="number" id="c-vgvm" placeholder="e.g. 3300"></div>
+          <div class="cf"><label>GCM (kg) — from manual</label><input type="number" id="c-vgcm" placeholder="e.g. 6800"></div>
+          <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border2)">
+            <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:.5rem">Vehicle Load (passengers &amp; gear)</div>
+            <div class="cf"><label>Passengers + luggage (kg)</label><input type="number" id="c-vload" placeholder="e.g. 300" value="320"></div>
+            <div class="cf"><label>Tub / cargo (kg)</label><input type="number" id="c-vcargo" placeholder="e.g. 80" value="0"></div>
+            <div class="cf"><label>Roof rack load (kg)</label><input type="number" id="c-vroof" placeholder="e.g. 20" value="0"></div>
+          </div>
+        </div>
+        <div class="ck-result" id="ck-result">
+          <h3>📋 Compliance Check Result</h3>
+          <div class="cg" id="cg"></div>
+          <div id="verd"></div>
+          <div class="law-notes" id="law-notes"></div>
+        </div>
+      </div>
+      <div style="margin-top:1rem"><button class="btn" style="max-width:260px" onclick="runCheck()">⚖️ Check This Combo</button></div>
+    </div>
+
+    <!-- ── API STATUS TAB ── -->
+    <div class="pview" id="tab-apistatus">
+      <div class="ll-wrap">
+        <h3>📡 API Connection Status</h3>
+        <table class="api-table">
+          <thead><tr><th>API</th><th>Endpoint</th><th>Purpose</th><th>Status</th><th>AU Tow Data?</th></tr></thead>
+          <tbody id="api-tbl">
+            <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:1rem">Checking connections…</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:1rem;font-size:.78rem;color:var(--muted);line-height:1.8;background:var(--s2);border-radius:6px;padding:.75rem 1rem">
+          <strong style="color:var(--text)">Why is there no free AU towing API?</strong><br>
+          Towing capacity, GVM and GCM are <strong style="color:var(--amber)">manufacturer-published values</strong> specific to each vehicle variant — they are not standardised in any government open-data registry. Paid services like <strong style="color:var(--text)">InfoAgent AU</strong> and <strong style="color:var(--text)">Blue Flag</strong> aggregate this data at a cost. For this app, AU towing specs are sourced directly from manufacturer documentation and overlaid on top of live API data where a make/model match is found.
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════════════
+// AU TOWING DATABASE — manufacturer published specs
+// ════════════════════════════════════════════════════════════════
+const AU_DB = [
+  {make:"Ford",model:"Ranger",variant:"XLT 3.0L V6 TD 4x4",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:8.6,towing:3500,towball:350,gvm:3280,gcm:6400,payload:995,engine:"3.0L V6 Turbo Diesel",kw:184,nm:600,trans:"10-Spd Auto",year:2025,use:["towing","tradie","offroad"],features:["Integrated Trailer Brake Controller","Pro Trailer Backup Assist","Trailer Sway Control","Blind Spot Monitor"],tags:["Best Seller","V6 Power","Top Payload"],pros:["Class-leading V6 tow","Highest payload","Smart brake controller"],cons:["Thirsty V6 under load","High demand/wait times"],verified:"Mar 2026",specUrl:"https://www.ford.com.au/cars/ranger/specs/"},
+  {make:"Toyota",model:"Hilux",variant:"SR5+ 2.8L TD 4x4 DC",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:8.5,towing:3500,towball:350,gvm:3100,gcm:6600,payload:870,engine:"2.8L 4-Cyl Turbo Diesel",kw:150,nm:500,trans:"6-Spd Auto",year:2025,use:["towing","tradie","offroad"],features:["Trailer Sway Control","Rear Diff Lock","DAC","Pre-Collision"],tags:["Most Reliable","Resale King"],pros:["Legendary reliability","Best resale value","AU-wide dealer network"],cons:["Less power vs V6 rivals","Older platform vs Ranger"],verified:"Mar 2026",specUrl:"https://www.toyota.com.au/hilux/features/specifications"},
+  {make:"Toyota",model:"Landcruiser",variant:"GXL 300 3.3L V6 Twin TD",body:"suv",fuel:"diesel",drive:"4wd",seats:7,ancap:5,fuelUse:9.5,towing:3500,towball:350,gvm:3280,gcm:6750,payload:700,engine:"3.3L V6 Twin Turbo Diesel",kw:227,nm:700,trans:"10-Spd Auto",year:2025,use:["towing","offroad","family"],features:["KDSS","Multi-Terrain Select","ICS","E-KDSS"],tags:["700Nm","Iconic","Off-Road King"],pros:["Best-in-class off-road","700Nm torque","Outstanding reliability"],cons:["Premium price","Lower payload vs utes"],verified:"Mar 2026",specUrl:"https://www.toyota.com.au/landcruiser-300/features/specifications"},
+  {make:"Toyota",model:"Prado",variant:"Kakadu 250 2.8L TD 4x4",body:"suv",fuel:"diesel",drive:"4wd",seats:7,ancap:5,fuelUse:8.8,towing:3500,towball:350,gvm:3200,gcm:6600,payload:605,engine:"2.8L 4-Cyl Turbo Diesel",kw:150,nm:500,trans:"8-Spd Auto",year:2025,use:["family","towing","offroad"],features:["Kinetic Dynamic Suspension","KDSS","Crawl Control","Multi-Terrain Select"],tags:["New 250 Series","7-Seat"],pros:["New platform","7-seat luxury","Excellent off-road"],cons:["3t tow limit","Low payload"],verified:"Mar 2026",specUrl:"https://www.toyota.com.au/prado/features/specifications"},
+  {make:"Isuzu",model:"D-Max",variant:"X-Terrain 3.0L TD 4x4",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:8.2,towing:3500,towball:350,gvm:3100,gcm:6600,payload:1012,engine:"3.0L 4-Cyl Turbo Diesel",kw:150,nm:500,trans:"6-Spd Auto",year:2025,use:["towing","tradie","offroad"],features:["TSC","Rear Diff Lock","HDC","360-Cam"],tags:["High Payload","Work Ready"],pros:["Outstanding payload","Proven diesel","Strong resale"],cons:["Less power vs V6 rivals","Interior trails rivals"],verified:"Mar 2026",specUrl:"https://www.isuzuute.com.au/d-max/specifications"},
+  {make:"Isuzu",model:"MU-X",variant:"LS-T 3.0L TD 4x4",body:"suv",fuel:"diesel",drive:"4wd",seats:7,ancap:5,fuelUse:8.3,towing:3500,towball:350,gvm:2800,gcm:5900,payload:670,engine:"3.0L 4-Cyl Turbo Diesel",kw:140,nm:450,trans:"6-Spd Auto",year:2025,use:["family","towing"],features:["TSC","Rear Diff Lock","HDC","7-Seat"],tags:["Value 7-Seat","3.5t Tow"],pros:["Best-value 7-seat 4WD","D-Max derived reliability"],cons:["Dated interior","Less premium feel"],verified:"Mar 2026",specUrl:"https://www.isuzuute.com.au/mu-x/specifications"},
+  {make:"Mitsubishi",model:"Triton",variant:"MR 2.4L TD 4x4 DC",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:8.0,towing:3100,towball:310,gvm:2990,gcm:6090,payload:890,engine:"2.4L 4-Cyl Turbo Diesel",kw:150,nm:470,trans:"6-Spd Auto",year:2025,use:["towing","tradie","family"],features:["Super Select 4WD","TSA","RCTA"],tags:["Coil Rear","Value Pick"],pros:["Comfortable coil rear","Good value","Capable 4WD"],cons:["Below 3t GVM","Lower tow vs rivals"],verified:"Mar 2026",specUrl:"https://www.mitsubishi-motors.com.au/vehicles/triton/specifications"},
+  {make:"Nissan",model:"Navara",variant:"PRO-4X 2.3L Bi-TD 4x4",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:8.4,towing:3500,towball:350,gvm:3100,gcm:6600,payload:906,engine:"2.3L 4-Cyl Bi-Turbo Diesel",kw:140,nm:450,trans:"7-Spd Auto",year:2025,use:["towing","tradie"],features:["TSC","Electronic Locking Rear Diff","Intelligent 4x4"],tags:["Bi-Turbo","Coil Rear"],pros:["Bi-turbo torque spread","Coil spring rear","Full 3.5t tow"],cons:["Lower payload vs D-Max","Bi-turbo complexity"],verified:"Mar 2026",specUrl:"https://www.nissan.com.au/vehicles/browse-range/navara/specs-and-pricing.html"},
+  {make:"Volkswagen",model:"Amarok",variant:"Style V6 TDI 4Motion",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:9.1,towing:3500,towball:350,gvm:3100,gcm:6600,payload:1012,engine:"3.0L V6 TDI",kw:177,nm:600,trans:"10-Spd Auto",year:2025,use:["towing","tradie"],features:["Trailer Assist","ACC","Lane Assist","360-Cam"],tags:["German Build","V6 600Nm"],pros:["Premium cabin quality","Strong V6","Highway refinement"],cons:["Premium price","Smaller dealer network"],verified:"Mar 2026",specUrl:"https://www.volkswagen.com.au/en/models/amarok/specifications.html"},
+  {make:"Ford",model:"Everest",variant:"Platinum 3.0L V6 TD 4x4",body:"suv",fuel:"diesel",drive:"4wd",seats:7,ancap:5,fuelUse:9.2,towing:3500,towball:350,gvm:3350,gcm:6850,payload:680,engine:"3.0L V6 Turbo Diesel",kw:184,nm:600,trans:"10-Spd Auto",year:2025,use:["family","towing","offroad"],features:["Trailer Brake Controller","Pro Trailer Backup Assist","Trail Control","360-Cam"],tags:["Family 4WD","Backup Assist"],pros:["7-seat family SUV","Pro trailer backup","Ranger V6"],cons:["Lower payload vs utes","Price creep"],verified:"Mar 2026",specUrl:"https://www.ford.com.au/cars/everest/specs/"},
+  {make:"Ram",model:"1500",variant:"Warlock 5.7L HEMI V8 4x4",body:"ute",fuel:"petrol",drive:"4wd",seats:5,ancap:0,fuelUse:16.5,towing:4536,towball:454,gvm:3084,gcm:7620,payload:900,engine:"5.7L V8 HEMI Petrol",kw:291,nm:556,trans:"8-Spd Auto",year:2025,use:["towing","tradie"],features:["Trailer Sway Control","Surround View","Uconnect 12\""],tags:["Highest Tow AU","V8 HEMI"],pros:["Highest tow rating AU (4,536kg)","Massive V8 grunt","Luxury cabin"],cons:["16+ L/100km","Parking difficult","High running costs"],verified:"Mar 2026",specUrl:"https://www.ramtrucks.com.au/ram-1500/specifications/"},
+  {make:"Land Rover",model:"Defender",variant:"130 D300 3.0L TD AWD",body:"suv",fuel:"diesel",drive:"awd",seats:8,ancap:5,fuelUse:10.2,towing:3500,towball:350,gvm:3500,gcm:7000,payload:800,engine:"3.0L I6 Turbo Diesel",kw:221,nm:650,trans:"8-Spd Auto",year:2025,use:["family","towing","offroad"],features:["ClearSight Rear View","Terrain Response 2","TSA","Wade Sensing"],tags:["GVM 3500kg","8-Seat","Premium"],pros:["Highest GVM in class","8-seat capacity","Exceptional tow stability"],cons:["Reliability concerns","Expensive service","Thirsty"],verified:"Mar 2026",specUrl:"https://www.landrover.com.au/defender/specifications.html"},
+  {make:"Mercedes-Benz",model:"GLE",variant:"350d 4MATIC 3.0L I6",body:"suv",fuel:"diesel",drive:"awd",seats:5,ancap:5,fuelUse:8.0,towing:3500,towball:350,gvm:3175,gcm:6675,payload:675,engine:"3.0L I6 Turbo Diesel",kw:200,nm:600,trans:"9-Spd Auto",year:2025,use:["family","towing"],features:["E-Active Body Control","Trailer Assist","Airmatic","Active Brake Assist"],tags:["Luxury Tow","Premium"],pros:["Luxury interior","Advanced trailer assist","Strong diesel"],cons:["Very expensive","High running costs","Lower payload"],verified:"Mar 2026",specUrl:"https://www.mercedes-benz.com.au/passengercars/mercedes-benz-cars/models/gle/gle-suv/technical-data.html"},
+  {make:"Nissan",model:"Patrol",variant:"Ti-L 5.6L V8 Petrol",body:"suv",fuel:"petrol",drive:"4wd",seats:8,ancap:5,fuelUse:14.9,towing:3500,towball:350,gvm:3505,gcm:7000,payload:658,engine:"5.6L V8 Petrol",kw:298,nm:560,trans:"7-Spd Auto",year:2025,use:["towing","offroad","family"],features:["TSC","Crawl Control","HDC","Around View Monitor"],tags:["V8 Icon","Outback Legend"],pros:["Massive V8 presence","Outback proven","8-seat comfort"],cons:["Thirsty V8","Low payload","Ageing platform"],verified:"Mar 2026",specUrl:"https://www.nissan.com.au/vehicles/browse-range/patrol/specs-and-pricing.html"},
+  {make:"Mazda",model:"BT-50",variant:"Thunder+ 3.0L TD 4x4",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:8.0,towing:3500,towball:350,gvm:3050,gcm:6550,payload:915,engine:"3.0L 4-Cyl Turbo Diesel",kw:150,nm:500,trans:"6-Spd Auto",year:2025,use:["towing","tradie"],features:["TSA","Rear Diff Lock","360-Cam","Heated Seats"],tags:["Isuzu Reliability","Well Equipped"],pros:["Isuzu-derived engine","Premium interior","Full tow spec"],cons:["Less power vs rivals","GVM below 3100"],verified:"Mar 2026",specUrl:"https://www.mazda.com.au/cars/bt-50/specifications/"},
+  {make:"GWM",model:"Cannon Alpha",variant:"Ultra Hybrid 2.0L Petrol HEV 4x4",body:"ute",fuel:"hybrid",drive:"4wd",seats:5,ancap:5,fuelUse:7.2,towing:3500,towball:350,gvm:3310,gcm:6555,payload:735,engine:"2.0L 4-Cyl Turbo Petrol + HEV",kw:207,nm:697,trans:"10-Spd Auto",year:2025,use:["towing","tradie"],features:["360-Cam","TSC","Electric Running Boards","Heated Seats"],tags:["Value Leader","Feature Rich"],pros:["Outstanding value","Full payload","Full tow spec"],cons:["Newer brand in AU","Resale still establishing"],verified:"Mar 2026",specUrl:"https://www.gwmanz.com/au/models/ute/cannon-alpha/"},
+  {make:"Toyota",model:"Fortuner",variant:"GR Sport 2.8L TD 4x4",body:"suv",fuel:"diesel",drive:"4wd",seats:7,ancap:5,fuelUse:8.6,towing:3000,towball:300,gvm:2990,gcm:5990,payload:555,engine:"2.8L 4-Cyl Turbo Diesel",kw:150,nm:500,trans:"6-Spd Auto",year:2025,use:["family","offroad"],features:["Multi-Terrain Select","Crawl Control","DAC","HSA"],tags:["7-Seat","GR Sport"],pros:["HiLux reliability","7-seat SUV","GR Sport looks"],cons:["3.1t tow limit","Low payload"],verified:"Mar 2026",specUrl:"https://www.toyota.com.au/fortuner/features/specifications"},
+  {make:"Ford",model:"Ranger Super Duty",variant:"Dual Cab 3.0L V6 TD 4x4",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:10.5,towing:4500,towball:450,gvm:4500,gcm:8000,payload:1825,engine:"3.0L V6 Turbo Diesel (Heavy Duty Calibration)",kw:154,nm:600,trans:"10-Spd Auto",year:2026,use:["towing","tradie","offroad"],features:["Integrated Trailer Brake Controller","Pro Trailer Backup Assist (10-trailer memory)","Onboard Scales","Smart Hitch","Front & Rear Locking Diffs","Snorkel (standard)","360-Cam","AdBlue/EU6.2"],tags:["4500kg Tow","4500kg GVM","8000kg GCM","New 2026","AU Developed"],pros:["Highest tow rating AU (4,500kg — class first)","Massive 4,500kg GVM on standard licence","1,825kg payload dual-cab","Onboard Scales + Smart Hitch tech","Developed in Victoria for AU conditions","5-yr factory warranty"],cons:["154kW — down from standard Ranger 184kW","Heavier kerb weight (~2,675kg DC)","AdBlue required","Due 2026 — pricing/availability TBC"],verified:"Mar 2026",specUrl:"https://www.ford.com.au/cars/ranger/specs/"},
+  {make:"LDV",model:"T60",variant:"Max Luxe 2.0L Twin TD 4x4",body:"ute",fuel:"diesel",drive:"4wd",seats:5,ancap:5,fuelUse:9.0,towing:3000,towball:300,gvm:3100,gcm:6100,payload:980,engine:"2.0L 4-Cyl Twin Turbo Diesel",kw:160,nm:480,trans:"8-Spd Auto",year:2025,use:["tradie","towing"],features:["TSC","HDC","360-Cam (opt)","Rear Camera"],tags:["Budget Buy","High Payload"],pros:["Outstanding price","Good payload","Feature loaded"],cons:["Newer brand","Resale unproven","3t tow limit"],verified:"Mar 2026",specUrl:"https://www.ldv.com.au/range/t60-max/specifications"},
+];
+
+// ════════════════════════════════════════════════════════════════
+// CarQuery API helpers (free, no key, JSONP-only → use fetch trick)
+// CarQuery requires JSONP; we'll use a JSONP loader
+// ════════════════════════════════════════════════════════════════
+const CQ_BASE = 'https://www.carqueryapi.com/api/0.3/';
+let cqAvail = null;
+const cache = {};
+
+async function cqFetch(params) {
+  const cacheKey = JSON.stringify(params);
+  if (cache[cacheKey]) return cache[cacheKey];
+
+  // CarQuery requires JSONP but many environments block cross-origin scripts.
+  // Strategy: try a CORS proxy first (allorigins), fall back to direct JSONP.
+  const qs = new URLSearchParams({...params, callback: 'cb'}).toString();
+  const directUrl = CQ_BASE + '?' + qs;
+
+  // Try allorigins CORS proxy
+  try {
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(directUrl.replace('&callback=cb',''));
+    const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
+    if (r.ok) {
+      const wrapper = await r.json();
+      const data = JSON.parse(wrapper.contents);
+      cache[cacheKey] = data;
+      return data;
+    }
+  } catch(e) {}
+
+  // Fall back to direct JSONP
+  return new Promise((resolve, reject) => {
+    const cbName = 'cq_' + Date.now() + '_' + Math.floor(Math.random()*9999);
+    const url = CQ_BASE + '?' + new URLSearchParams({...params, callback: cbName}).toString();
+    const script = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 8000);
+    function cleanup() { clearTimeout(timer); delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = (data) => { cleanup(); cache[cacheKey] = data; resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error('script error')); };
+    script.src = url;
+    document.head.appendChild(script);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  initChips();
+  checkAPIs();
+  loadMakes();
+});
+
+function initChips() {
+  document.querySelectorAll('.chips .chip').forEach(c => {
+    c.addEventListener('click', () => c.classList.toggle('on'));
+  });
+}
+
+function rv(id, labelId, pre='', suf='') {
+  const v = parseInt(document.getElementById(id).value);
+  document.getElementById(labelId).textContent = pre + v.toLocaleString() + suf;
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pview').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════════════
+// API STATUS CHECKS
+// ════════════════════════════════════════════════════════════════
+async function checkAPIs() {
+  const cqPill = document.getElementById('cq-pill');
+
+  // Check CarQuery
+  try {
+    await cqFetch({cmd:'getYears'});
+    cqAvail = true;
+    cqPill.className = 'pill live';
+    cqPill.innerHTML = '<span class="blink"></span> CarQuery Live';
+  } catch(e) {
+    cqAvail = false;
+    cqPill.className = 'pill off';
+    cqPill.innerHTML = '<span class="blink"></span> CarQuery Offline';
+  }
+
+  updateAPITable();
+}
+
+function updateAPITable() {
+  const tbl = document.getElementById('api-tbl');
+  const rows = [
+    { name:'CarQuery API', url:'carqueryapi.com/api/0.3', purpose:'Makes / Models / Trims / Engine specs (global)', ok: cqAvail, auTow:'❌ No tow/GVM data' },
+    { name:'AU Towing Dataset', url:'Built-in (manufacturer sources)', purpose:'AU towing, GVM, GCM, payload — verified from manufacturer specs', ok: true, auTow:'✅ Full AU specs' },
+    { name:'InfoAgent AU', url:'infoagent.com.au/api', purpose:'AU rego lookup, full vehicle data from govt registries', ok: null, auTow:'✅ Yes (paid)' },
+    { name:'Blue Flag AU', url:'blueflag.com.au', purpose:'AU plate/VIN lookup, millions of vehicles', ok: null, auTow:'✅ Yes (paid)' },
+  ];
+  tbl.innerHTML = rows.map(r => {
+    const sc = r.ok === true ? 'color:var(--green)' : r.ok === false ? 'color:var(--red)' : 'color:var(--amber)';
+    const sv = r.ok === true ? '✅ Connected' : r.ok === false ? '❌ Unavailable' : '🔑 API Key Required';
+    return `<tr><td><strong>${r.name}</strong></td><td style="color:var(--muted);font-size:.72rem">${r.url}</td><td>${r.purpose}</td><td style="${sc}">${sv}</td><td>${r.auTow}</td></tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+// MAKE/MODEL LOADING (CarQuery)
+// ════════════════════════════════════════════════════════════════
+async function loadMakes() {
+  const targets = ['f-make', 'c-make', 'll-make'];
+  document.getElementById('make-loading').style.display = 'inline';
+
+  let makes = [];
+  try {
+    const data = await cqFetch({cmd:'getMakes'});
+    makes = (data.Makes || []).map(m => ({id: m.make_id, name: m.make_display}));
+  } catch(e) {
+    // Fallback to AU curated list
+    makes = ["BMW","Chery","Ford","GWM","Haval","Holden","Honda","Hyundai","Isuzu","Kia","Land Rover","LDV","Lexus","Mazda","Mercedes-Benz","Mitsubishi","Nissan","Peugeot","Ram","Renault","SsangYong","Subaru","Suzuki","Toyota","Volkswagen","Volvo"]
+      .map(n => ({id: n.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''), name: n}));
+  }
+
+  document.getElementById('make-loading').style.display = 'none';
+
+  targets.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Any Make</option>';
+    makes.forEach(m => {
+      const o = new Option(m.name, m.id);
+      o.dataset.name = m.name;
+      sel.appendChild(o);
+    });
+    // Restore "Select Make" label for non-filter selects
+    if (id !== 'f-make') sel.options[0].text = 'Select Make';
+  });
+}
+
+async function onMakeChange(makeId, modelId) {
+  const makeSel = document.getElementById(makeId);
+  const modelSel = document.getElementById(modelId);
+  const makeVal = makeSel.value;
+  const makeName = makeSel.options[makeSel.selectedIndex]?.dataset?.name || makeSel.value;
+
+  modelSel.innerHTML = '<option value="">Loading…</option>';
+  modelSel.disabled = true;
+
+  if (!makeVal) {
+    modelSel.innerHTML = '<option value="">Any Model</option>';
+    return;
+  }
+
+  try {
+    const data = await cqFetch({cmd:'getModels', make: makeVal});
+    const models = data.Models || [];
+    modelSel.innerHTML = '<option value="">Any Model</option>';
+    models.forEach(m => {
+      const o = new Option(m.model_name, m.model_name);
+      modelSel.appendChild(o);
+    });
+    modelSel.disabled = false;
+  } catch(e) {
+    // Fallback: show AU DB models for this make
+    const auModels = [...new Set(AU_DB.filter(v => v.make.toLowerCase().includes(makeName.toLowerCase()) || makeName.toLowerCase().includes(v.make.toLowerCase())).map(v => v.model))];
+    modelSel.innerHTML = '<option value="">Any Model</option>';
+    auModels.forEach(m => modelSel.appendChild(new Option(m, m)));
+    modelSel.disabled = false;
+  }
+}
+
+function onModelChange() {
+  // Could trigger auto-search; leave for explicit button click
+}
+
+// ════════════════════════════════════════════════════════════════
+// VEHICLE FINDER SEARCH
+// ════════════════════════════════════════════════════════════════
+let filtered = [], sortKey = 'towing';
+
+function getChips(id) { return [...document.querySelectorAll(`#${id} .chip.on`)].map(c => c.dataset.v); }
+
+function runSearch() {
+  const btn = document.getElementById('sbtn');
+  btn.disabled = true; btn.textContent = '⟳ Searching…';
+  showSkels();
+
+  const makeSel = document.getElementById('f-make');
+  const makeName = makeSel.options[makeSel.selectedIndex]?.dataset?.name || '';
+  const modelVal = document.getElementById('f-model').value.toLowerCase();
+  const towMin = parseInt(document.getElementById('f-tow').value);
+  const payMin = parseInt(document.getElementById('f-payload').value)||0;
+  const gvmMin = parseInt(document.getElementById('f-gvm').value)||0;
+  const useVal = document.getElementById('f-use').value;
+  const seatsMin = parseInt(document.getElementById('f-seats').value);
+  const ancapMin = parseInt(document.getElementById('f-ancap').value);
+  const fuseMax = parseFloat(document.getElementById('f-fuse').value);
+  const yearMin = parseInt(document.getElementById('f-year').value)||2022;
+  const bodies = getChips('f-body');
+  const drives = getChips('f-drive');
+  const fuels = getChips('f-fuel');
+
+  setTimeout(() => {
+    filtered = AU_DB.filter(v => {
+      if (makeName && !v.make.toLowerCase().includes(makeName.toLowerCase()) && !makeName.toLowerCase().includes(v.make.toLowerCase())) return false;
+      if (modelVal && !v.model.toLowerCase().includes(modelVal) && !v.variant.toLowerCase().includes(modelVal)) return false;
+      if (v.year < yearMin) return false;
+      if (v.towing < towMin) return false;
+      if (v.payload < payMin) return false;
+      if (v.gvm < gvmMin) return false;
+      if (useVal && !v.use.includes(useVal)) return false;
+      if (bodies.length && !bodies.includes(v.body)) return false;
+      if (drives.length && !drives.includes(v.drive)) return false;
+      if (fuels.length && !fuels.includes(v.fuel)) return false;
+      if (v.seats < seatsMin) return false;
+      if (v.ancap < ancapMin) return false;
+      if (v.fuelUse > fuseMax) return false;
+      return true;
+    });
+    renderResults();
+    btn.disabled = false; btn.innerHTML = '🔍 Find Vehicles';
+  }, 400);
+}
+
+function setSort(k) {
+  sortKey = k;
+  document.querySelectorAll('.sc').forEach(c => c.classList.toggle('active', c.dataset.sort===k));
+  renderResults();
+}
+
+function resetAll() {
+  // Reset selects to defaults
+  const defaults = { 'f-make':'', 'f-model':'', 'f-seats':'5', 'f-ancap':'0', 'f-fuse':'99' };
+  Object.entries(defaults).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = val; }
+  });
+  // Disable model select until make chosen
+  const modelEl = document.getElementById('f-model');
+  if (modelEl) { modelEl.disabled = true; modelEl.innerHTML = '<option value="">Select make first</option>'; }
+  // Reset all chip groups — remove 'on' class from all chips
+  document.querySelectorAll('#f-body .chip, #f-drive .chip, #f-fuel .chip').forEach(c => c.classList.remove('on'));
+  // Reset sort
+  sortKey = 'towing';
+  document.querySelectorAll('.sc').forEach(c => c.classList.toggle('active', c.dataset.sort === 'towing'));
+  // Clear results
+  const results = document.getElementById('results');
+  if (results) results.innerHTML = `<div class="empty"><div class="empty-ico">🚙</div><h3>Set your filters &amp; search</h3><p>Use the sidebar to configure requirements, then click <strong>Find Vehicles</strong>.</p></div>`;
+  filtered = [];
+}
+
+function showSkels() {
+  const el = document.getElementById('results');
+  if (!el) return;
+  el.innerHTML = Array(6).fill(0).map(() =>
+    `<div class="skel" style="height:160px;border-radius:12px;position:relative;overflow:hidden"></div>`
+  ).join('');
+}
+
+function hideSkels() {
+  // Results are replaced by renderResults — nothing extra needed
+}
+
+function renderResults() {
+  const el = document.getElementById('results');
+  const s = [...filtered];
+  if (sortKey==='towing') s.sort((a,b)=>b.towing-a.towing);
+  else if (sortKey==='payload') s.sort((a,b)=>b.payload-a.payload);
+  
+  else if (sortKey==='gvm') s.sort((a,b)=>b.gvm-a.gvm);
+  else if (sortKey==='kw') s.sort((a,b)=>b.kw-a.kw);
+
+  if (!s.length) { el.innerHTML=`<div class="empty"><div class="empty-ico">🔍</div><h3>No matches</h3><p>Try relaxing filters — lower min tow, increase budget, or select more body types.</p></div>`; return; }
+  const maxTow = Math.max(...s.map(v=>v.towing));
+
+  el.innerHTML = `
+    <div class="rh">
+      <div class="rc"><strong>${s.length}</strong> vehicle${s.length!==1?'s':''} matched</div>
+      <div class="sort-row">
+        <span class="sl">Sort:</span>
+        ${[['towing','Tow'],['payload','Payload'],['gvm','GVM'],['kw','Power']].map(([k,l])=>`<span class="sc ${sortKey===k?'active':''}" data-sort="${k}" onclick="setSort('${k}')">${l}</span>`).join('')}
+      </div>
+    </div>
+    <div class="vgrid">${s.map((v,i)=>vcard(v,i,maxTow)).join('')}</div>`;
+}
+
+function vcard(v, idx, maxTow) {
+  const tp = Math.round((v.towing/maxTow)*100);
+  const bc = tp>=90?'var(--green)':tp>=70?'var(--amber)':'var(--accent2)';
+  const bodyLbl = {ute:'Ute',suv:'SUV',wagon:'Wagon',van:'Van',truck:'Truck'}[v.body]||v.body;
+  const stars = v.ancap>0?'★'.repeat(v.ancap)+'☆'.repeat(5-v.ancap):'—';
+  const di = AU_DB.indexOf(v);
+  return `<div class="vcard" style="animation-delay:${idx*.06}s">
+  <div class="vc-head">
+    <div>
+      <span class="vc-source src-local">AU Dataset</span>
+      <div class="vmk">${v.make}</div>
+      <div class="vn">${v.model}</div>
+      <div class="vv">${v.variant}</div>
+    </div>
+    ${auMatch ? `
+    <div class="sp"><div class="spk">AU Tow</div><div class="spv hi">${auMatch.towing.toLocaleString()} kg</div></div>
+    <div class="sp"><div class="spk">Payload</div><div class="spv ok">${auMatch.payload.toLocaleString()} kg</div></div>
+    <div class="sp"><div class="spk">GVM</div><div class="spv">${auMatch.gvm.toLocaleString()} kg</div></div>
+    <div class="sp"><div class="spk">GCM</div><div class="spv">${auMatch.gcm.toLocaleString()} kg</div></div>
+    ` : `
+    <div class="sp"><div class="spk">AU Tow</div><div class="spv na">Not in AU DB</div></div>
+    <div class="sp"><div class="spk">Payload</div><div class="spv na">—</div></div>
+    `}
+  </div>
+  <div class="vcf">
+    <div class="vtags">
+      ${body !== '—' ? `<span class="vtag t-blue">${body}</span>` : ''}
+      ${fuelDisp !== '—' ? `<span class="vtag t-blue">${fuelDisp}</span>` : ''}
+      ${auMatch ? `${auMatch.tags.map(t=>`<span class="vtag t-green">${t}</span>`).join('')}` : `<span class="vtag t-amber">API Data Only</span>`}
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+      ${v.verified ? `<span style="font-size:.63rem;color:var(--muted);display:flex;align-items:center;gap:.2rem" title="Specs verified from manufacturer data">✓ ${v.verified}</span>` : ''}
+      ${v.specUrl ? `<a href="${v.specUrl}" target="_blank" rel="noopener" style="font-size:.63rem;font-weight:700;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:.2rem;padding:.15rem .45rem;border:1px solid rgba(46,122,140,.3);border-radius:10px;background:rgba(46,122,140,.08)" title="View manufacturer specs">↗ Mfr Specs</a>` : ''}
+    </div>
+  </div>
+</div>`;
+}
+
+// ════════════════════════════════════════════════════════════════
+// CHECKER TAB
+// ════════════════════════════════════════════════════════════════
+function calcTrailer() {
+  const atm = parseFloat(document.getElementById('c-atm').value)||0;
+  const tare = parseFloat(document.getElementById('c-tare').value)||0;
+  const ball = parseFloat(document.getElementById('c-ball').value)||0;
+  if (atm && tare) document.getElementById('c-tpay').value = Math.max(0, atm-tare);
+  if (atm && ball) document.getElementById('c-gtm').value = Math.max(0, atm-ball);
+}
+
+async function onCheckerMake() {
+  const makeEl = document.getElementById('c-make');
+  const modelEl = document.getElementById('c-model');
+  await onMakeChange('c-make','c-model');
+  // Also try to autofill from DB after models load
+  setTimeout(() => autofillFromDB(), 600);
+}
+
+function autofillFromDB() {
+  const makeEl = document.getElementById('c-make');
+  const modelEl = document.getElementById('c-model');
+  const makeName = makeEl.options[makeEl.selectedIndex]?.dataset?.name || '';
+  const modelVal = modelEl.value.toLowerCase();
+  const v = AU_DB.find(v =>
+    (v.make.toLowerCase().includes(makeName.toLowerCase()) || makeName.toLowerCase().includes(v.make.toLowerCase())) &&
+    (!modelVal || v.model.toLowerCase().includes(modelVal))
+  );
+  if (!v) return;
+  const fields = {
+    'c-vtow': v.towing, 'c-vball': v.towball,
+    'c-vgvm': v.gvm, 'c-vgcm': v.gcm
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = val;
+  });
+}
+
+function runCheck() {
+  const atm = parseFloat(document.getElementById('c-atm').value)||0;
+  const gtm = parseFloat(document.getElementById('c-gtm').value)||0;
+  const ball = parseFloat(document.getElementById('c-ball').value)||0;
+  const brakes = document.getElementById('c-brakes').value;
+  const vtow = parseFloat(document.getElementById('c-vtow').value)||0;
+  const vball = parseFloat(document.getElementById('c-vball').value)||0;
+  const vgvm = parseFloat(document.getElementById('c-vgvm').value)||0;
+  const vgcm = parseFloat(document.getElementById('c-vgcm').value)||0;
+  const vload = parseFloat(document.getElementById('c-vload').value)||0;
+  const vcargo = parseFloat(document.getElementById('c-vcargo').value)||0;
+  const vroof = parseFloat(document.getElementById('c-vroof').value)||0;
+
+  if (!atm||!vtow||!vgvm) { alert('Please fill in ATM, Vehicle Tow Rating and GVM at minimum.'); return; }
+
+  const checks = [];
+
+  checks.push({
+    l:'Tow Capacity', v:`${atm.toLocaleString()} / ${vtow.toLocaleString()} kg`,
+    s: atm<=vtow?'pass':'fail',
+    n: atm<=vtow ? 'ATM within manufacturer rating ✓' : `ATM exceeds tow rating by ${(atm-vtow).toLocaleString()} kg ❌`
+  });
+
+  const ballOver = ball > vball;
+  const ballPct = atm ? (ball/atm)*100 : 0;
+  checks.push({
+    l:'Towball Mass', v:`${ball} / ${vball} kg`,
+    s: ballOver?'fail': ballPct>12||ballPct<8&&ball>0?'warn':'pass',
+    n: ballOver ? 'Exceeds max towball mass!' : `${ballPct.toFixed(1)}% of ATM (ideal 8–12%)`
+  });
+
+  // GCM: estimated total = vehicle GVM (conservative 90%) + ATM
+  const estGCM = vgvm*0.9 + atm;
+  checks.push({
+    l:'GCM (estimated)', v:`~${Math.round(estGCM).toLocaleString()} / ${vgcm.toLocaleString()} kg`,
+    s: estGCM<=vgcm?'pass':'fail',
+    n: 'Based on 90% GVM + ATM. Verify with actual kerb weight + occupants.'
+  });
+
+  const brakesNeeded = gtm>750||(atm>750&&!gtm);
+  const brakesOk = !brakesNeeded||brakes!=='none';
+  checks.push({
+    l:'Brake Requirement', v:brakes.charAt(0).toUpperCase()+brakes.slice(1),
+    s: brakesOk?'pass':'fail',
+    n: brakesNeeded ? (brakesOk?'Brakes fitted — required for GTM > 750kg ✓':'⚠️ Brakes required for GTM > 750kg under AU law') : 'GTM ≤ 750kg — brakes not mandatory'
+  });
+
+  checks.push({
+    l:'Ball Weight %', v:`${ballPct.toFixed(1)}%`,
+    s: ballPct>=8&&ballPct<=12?'pass':ballPct===0?'warn':'warn',
+    n: 'Ideal: 8–12% of ATM for stable towing. Outside range increases sway risk.'
+  });
+
+  const ratio = atm && vgvm ? atm/vgvm : 0;
+  checks.push({
+    l:'Tow/GVM Ratio', v: ratio ? `${ratio.toFixed(2)}:1` : 'N/A',
+    s: ratio>1.5?'warn':'pass',
+    n: ratio>1.5 ? 'Trailer >1.5× GVM — check GCM and consider weight distribution hitch' : 'Ratio within comfortable range'
+  });
+
+  const payloadUsed = ball + vload + vcargo + vroof;
+  const payloadAvail = vgvm - (vgvm * 0.75); // rough payload estimate
+  checks.push({
+    l:'Estimated Payload Use', v:`${Math.round(payloadUsed).toLocaleString()} kg`,
+    s: payloadUsed<800?'pass':payloadUsed<1000?'warn':'warn',
+    n: `Ball weight + passengers + cargo. Check against your specific vehicle's payload sticker.`
+  });
+
+  const fails = checks.filter(c=>c.s==='fail');
+  const warns = checks.filter(c=>c.s==='warn');
+  const vs = fails.length?'fail':warns.length?'warn':'pass';
+  const vt = fails.length
+    ? `❌ ${fails.length} compliance issue${fails.length>1?'s':''} — this combination may not be road legal.`
+    : warns.length
+    ? `⚠️ ${warns.length} advisory item${warns.length>1?'s':''} — review before towing.`
+    : `✅ All checks passed — combination appears compliant. Always verify with your dealer.`;
+
+  document.getElementById('cg').innerHTML = checks.map(c=>`
+    <div class="ci ${c.s}">
+      <div class="cl">${c.l}</div>
+      <div class="cv ${c.s}">${c.v}</div>
+      <div class="cn">${c.n}</div>
+    </div>`).join('');
+
+  document.getElementById('verd').innerHTML = `<div class="verdict ${vs}"><span style="font-size:1.3rem">${vs==='pass'?'✅':vs==='warn'?'⚠️':'❌'}</span><span>${vt}</span></div>`;
+
+  document.getElementById('law-notes').innerHTML = `
+    <strong>Key Australian towing law &amp; safety guidelines:</strong><br>
+    • Trailer brakes mandatory when GTM &gt; 750 kg (most states)<br>
+    • Electric brakes typically required when ATM &gt; 2,000 kg (varies by state)<br>
+    • GCM (vehicle + trailer combined) must not exceed manufacturer's rated GCM<br>
+    • Towball mass must be within vehicle manufacturer's published limit<br>
+    • Ball weight 8–12% of ATM recommended for stability (NTC guidelines)<br>
+    • Trailers &gt; 4,500 kg GCM may fall under Heavy Vehicle National Law<br>
+    • WA, QLD, SA, VIC may have state-specific variations — check your state RMS/TMR<br>
+    <span style="color:var(--red)">⚠️ This tool is for research only. Verify with your dealer, state road authority, and a qualified tow installer.</span>`;
+
+  const r = document.getElementById('ck-result');
+  r.classList.add('show');
+  r.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── Live Vehicle Lookup ──────────────────────────────────────────
+async function runLiveLookup() {
+  const make  = document.getElementById('ll-make')?.value?.trim();
+  const model = document.getElementById('ll-model')?.value?.trim();
+  const year  = document.getElementById('ll-year')?.value?.trim();
+  const out   = document.getElementById('ll-results');
+  if (!out) return;
+  if (!make) { out.innerHTML = '<p style="color:var(--amber);padding:1rem">Please enter a make.</p>'; return; }
+
+  out.innerHTML = '<p style="color:var(--muted);padding:1rem">⏳ Searching...</p>';
+
+  // Try CarQuery via CORS proxy
+  try {
+    const params = { cmd:'getTrims', make, full_results:1 };
+    if (model) params.model = model;
+    if (year)  params.year  = year;
+
+    const data = await cqFetch(params);
+    const trims = data?.Trims || [];
+
+    if (!trims.length) {
+      // Check AU DB for a match anyway
+      const auHits = AU_DB.filter(v =>
+        v.make.toLowerCase().includes(make.toLowerCase()) &&
+        (!model || v.model.toLowerCase().includes(model.toLowerCase()))
+      );
+      if (auHits.length) {
+        out.innerHTML = '<p style="color:var(--muted);padding:.5rem 0 .75rem">No CarQuery data — showing AU database matches:</p>' +
+          auHits.map(v => buildCard(v, true)).join('');
+      } else {
+        out.innerHTML = `<p style="color:var(--muted);padding:1rem">No results found for "<strong>${make}${model?' '+model:''}</strong>". Try a different make or model name.</p>`;
+      }
+      return;
+    }
+
+    // Deduplicate by model+trim name
+    const seen = new Set();
+    const unique = trims.filter(t => {
+      const key = (t.model_name||'') + '|' + (t.model_trim||'');
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    }).slice(0, 12);
+
+    // Find AU DB overlay
+    const auMatch = AU_DB.find(v =>
+      v.make.toLowerCase() === make.toLowerCase() &&
+      (!model || v.model.toLowerCase().includes(model.toLowerCase()))
+    );
+
+    out.innerHTML = unique.map(t => {
+      const kw   = t.model_engine_power_ps ? Math.round(t.model_engine_power_ps * 0.7355) : null;
+      const nm   = t.model_engine_torque_nm || null;
+      const eng  = [t.model_engine_cc ? (t.model_engine_cc/1000).toFixed(1)+'L' : null, t.model_engine_type, t.model_engine_fuel].filter(Boolean).join(' ');
+      const seats= t.model_seats || '—';
+      const body = t.model_body || '—';
+      const trans= t.model_transmission_type || '—';
+
+      return `<div class="ll-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+          <div>
+            <div style="font-weight:800;font-size:1rem;color:var(--text)">${t.make_display||make} ${t.model_name||model||''}</div>
+            <div style="font-size:.78rem;color:var(--muted)">${t.model_trim||''} ${t.model_year||year||''}</div>
+          </div>
+          <span style="font-size:.65rem;font-weight:700;padding:.2rem .55rem;border-radius:12px;background:rgba(46,122,140,.15);color:var(--accent);border:1px solid rgba(46,122,140,.3)">${auMatch?'API + AU Overlay':'CarQuery Live'}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.4rem;font-size:.78rem">
+          ${eng ? `<div><span style="color:var(--muted);font-size:.68rem;display:block">Engine</span><strong>${eng}</strong></div>` : ''}
+          ${kw  ? `<div><span style="color:var(--muted);font-size:.68rem;display:block">Power</span><strong>${kw} kW</strong></div>` : ''}
+          ${nm  ? `<div><span style="color:var(--muted);font-size:.68rem;display:block">Torque</span><strong>${nm} Nm</strong></div>` : ''}
+          <div><span style="color:var(--muted);font-size:.68rem;display:block">Body</span><strong>${body}</strong></div>
+          <div><span style="color:var(--muted);font-size:.68rem;display:block">Seats</span><strong>${seats}</strong></div>
+          <div><span style="color:var(--muted);font-size:.68rem;display:block">Trans</span><strong>${trans}</strong></div>
+          ${auMatch ? `
+          <div><span style="color:var(--muted);font-size:.68rem;display:block">🇦🇺 Towing</span><strong>${auMatch.towing.toLocaleString()} kg</strong></div>
+          <div><span style="color:var(--muted);font-size:.68rem;display:block">🇦🇺 GVM</span><strong>${auMatch.gvm.toLocaleString()} kg</strong></div>
+          <div><span style="color:var(--muted);font-size:.68rem;display:block">🇦🇺 GCM</span><strong>${auMatch.gcm.toLocaleString()} kg</strong></div>
+          <div><span style="color:var(--muted);font-size:.68rem;display:block">🇦🇺 Payload</span><strong>${auMatch.payload.toLocaleString()} kg</strong></div>
+          ` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    // API failed — fall back to AU DB only
+    const auHits = AU_DB.filter(v =>
+      v.make.toLowerCase().includes(make.toLowerCase()) &&
+      (!model || v.model.toLowerCase().includes(model.toLowerCase()))
+    );
+    if (auHits.length) {
+      out.innerHTML = '<p style="color:var(--muted);padding:.5rem 0 .75rem;font-size:.8rem">⚠️ CarQuery unavailable — showing AU database:</p>' +
+        auHits.map(v => buildCard(v, true)).join('');
+    } else {
+      out.innerHTML = `<p style="color:var(--amber);padding:1rem">API unavailable and no AU data found for "${make}". Check your connection or try again.</p>`;
+    }
+  }
+}
+</script>
+</body>
+</html>
