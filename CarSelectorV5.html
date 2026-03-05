@@ -98,6 +98,56 @@ input::placeholder{color:rgba(184,200,176,.35)}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:#0E0A04}
 ::-webkit-scrollbar-thumb{background:var(--sun1);border-radius:3px}
+
+/* ── OVERALL VERDICT BANNER ── */
+.verdict-banner{border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem}
+.verdict-banner.pass{background:rgba(90,122,80,.2);border:2px solid rgba(90,122,80,.5)}
+.verdict-banner.warn{background:rgba(200,114,10,.15);border:2px solid rgba(200,114,10,.45)}
+.verdict-banner.fail{background:rgba(166,58,26,.2);border:2px solid rgba(166,58,26,.55)}
+.vb-icon{font-size:2rem;line-height:1}
+.vb-right{}
+.vb-status{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.vb-status.pass{color:#7AAA68}
+.vb-status.warn{color:var(--sun2)}
+.vb-status.fail{color:#D06040}
+.vb-vehicle{font-size:.8rem;color:#B8C8B0;margin-top:.15rem}
+
+/* ── QUICK SCAN LIST ── */
+.qs-list{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1rem}
+.qs-item{display:flex;align-items:center;gap:.6rem;font-size:.88rem;font-weight:700;padding:.35rem .5rem;border-radius:6px}
+.qs-item.pass{color:#7AAA68;background:rgba(90,122,80,.07)}
+.qs-item.warn{color:var(--sun2);background:rgba(200,114,10,.07)}
+.qs-item.fail{color:#D06040;background:rgba(166,58,26,.1)}
+.qs-icon{font-size:1rem;width:1.2rem;text-align:center;flex-shrink:0}
+
+/* ── DETAIL TOGGLE ── */
+.detail-toggle{width:100%;padding:.45rem;background:rgba(255,255,255,.04);color:#B8C8B0;
+  border:1px solid rgba(200,114,10,.2);border-radius:6px;font-size:.78rem;font-weight:600;
+  cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:.75rem;transition:all .15s;text-align:center}
+.detail-toggle:hover{border-color:var(--sun2);color:var(--text)}
+#r-detail{display:none}
+
+/* ── PAYLOAD SUMMARY ── */
+.payload-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.75rem}
+.pb-item{background:rgba(255,255,255,.05);border:1px solid rgba(200,114,10,.15);border-radius:8px;padding:.6rem;text-align:center}
+.pb-num{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800}
+.pb-lbl{font-size:.62rem;color:#B8C8B0;text-transform:uppercase;letter-spacing:.05em;margin-top:.1rem}
+.pb-bar-wrap{height:6px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:.4rem;overflow:hidden}
+.pb-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+
+/* ── STATE SELECTOR ── */
+select.state-sel{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(200,114,10,.25);
+  border-radius:6px;color:var(--text);padding:.45rem .65rem;font-size:.85rem;
+  font-family:'Nunito',sans-serif;outline:none;transition:border-color .15s}
+select.state-sel:focus{border-color:var(--accent)}
+
+/* ── SOURCES BOX ── */
+.sources-box{margin-top:1rem;font-size:.74rem;color:#B8C8B0;line-height:1.9;
+  background:rgba(255,255,255,.03);border-radius:6px;padding:.75rem 1rem;
+  border:1px solid rgba(200,114,10,.12)}
+.sources-box strong{color:var(--text);display:block;margin-bottom:.3rem}
+.sources-box a{color:var(--sun2);text-decoration:none}
+.sources-box a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -150,6 +200,20 @@ input::placeholder{color:rgba(184,200,176,.35)}
             <span class="chip" data-v="tandem">Tandem</span>
             <span class="chip" data-v="triple">Triple</span>
           </div>
+        </div>
+        <div style="margin-top:.6rem">
+          <label>State / Territory</label>
+          <select id="c-state" class="state-sel">
+            <option value="all">All states (general)</option>
+            <option value="nsw">NSW</option>
+            <option value="vic">VIC</option>
+            <option value="qld">QLD</option>
+            <option value="wa">WA</option>
+            <option value="sa">SA</option>
+            <option value="tas">TAS</option>
+            <option value="act">ACT</option>
+            <option value="nt">NT</option>
+          </select>
         </div>
       </div>
     </div>
@@ -311,22 +375,58 @@ input::placeholder{color:rgba(184,200,176,.35)}
   <!-- RESULTS -->
   <div id="results" class="card" style="margin-top:1.25rem">
     <div class="card-title">📋 Compliance Result</div>
-    <div class="summary-bar">
-      <div class="sb-item"><div class="sb-num" id="r-pass" style="color:var(--green)">—</div><div class="sb-lbl">Pass</div></div>
-      <div class="sb-item"><div class="sb-num" id="r-warn" style="color:var(--amber)">—</div><div class="sb-lbl">Advisory</div></div>
-      <div class="sb-item"><div class="sb-num" id="r-fail" style="color:var(--red)">—</div><div class="sb-lbl">Fail</div></div>
-    </div>
+
+    <!-- Overall verdict banner -->
     <div id="r-verdict"></div>
-    <div id="r-checks"></div>
+
+    <!-- Quick scan list -->
+    <div id="r-quickscan" class="qs-list"></div>
+
+    <!-- Payload summary bar -->
+    <div id="r-payload-bar" style="display:none">
+      <hr class="div">
+      <div style="font-size:.72rem;font-weight:700;color:#B8C8B0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem">Vehicle Payload</div>
+      <div class="payload-bar">
+        <div class="pb-item">
+          <div class="pb-num" id="pb-gvm">—</div>
+          <div class="pb-lbl">GVM</div>
+        </div>
+        <div class="pb-item">
+          <div class="pb-num" id="pb-used">—</div>
+          <div class="pb-lbl">Used</div>
+        </div>
+        <div class="pb-item">
+          <div class="pb-num" id="pb-remain">—</div>
+          <div class="pb-lbl">Remaining</div>
+        </div>
+      </div>
+      <div class="pb-bar-wrap">
+        <div class="pb-bar-fill" id="pb-fill" style="width:0%;background:var(--green)"></div>
+      </div>
+      <div id="pb-label" style="font-size:.7rem;color:#B8C8B0;margin-top:.3rem;text-align:right"></div>
+    </div>
+
+    <!-- Detail toggle -->
+    <hr class="div">
+    <button class="detail-toggle" onclick="toggleDetail()">▼ Show detailed breakdown</button>
+    <div id="r-detail">
+      <div id="r-checks"></div>
+    </div>
+
+    <!-- Law notes + sources -->
     <div class="law-box">
-      <strong>🇦🇺 Australian Towing Law Notes</strong><br>
-      • Trailer brakes required when GTM exceeds 750 kg in all states<br>
-      • Electric brakes typically required when ATM exceeds 2,000 kg (varies by state)<br>
-      • Ball weight must not exceed manufacturer's max towball mass<br>
-      • Vehicle must not exceed GVM when ball weight is added<br>
-      • Combined vehicle + trailer must not exceed GCM<br>
-      • WA, QLD, SA, VIC may have state-specific variations — check your state RMS/TMR<br>
-      <span style="color:#D06040">⚠️ This tool is a guide only. Always verify with your dealer, state road authority, and a qualified tow installer.</span>
+      <strong>🇦🇺 Brake Rules</strong>
+      <div id="r-brake-rules"></div>
+    </div>
+    <div class="sources-box">
+      <strong>📚 Sources &amp; References</strong>
+      • <a href="https://www.ntc.gov.au/heavy-vehicles/heavy-vehicle-standards/vehicle-standards-information/towing" target="_blank">National Transport Commission — Towing Guidelines</a><br>
+      • <a href="https://www.legislation.gov.au/Series/F2011L01052" target="_blank">Australian Design Rules (ADR)</a><br>
+      • <a href="https://www.rms.nsw.gov.au/roads/licence/driver-knowledge-test/car/towing.html" target="_blank">Transport for NSW — Towing</a><br>
+      • <a href="https://www.tmr.qld.gov.au/Travel-and-transport/Towing" target="_blank">TMR Queensland — Towing</a><br>
+      • <a href="https://www.vicroads.vic.gov.au/safety-and-road-rules/road-rules/a-guide-to-the-road-rules/towing" target="_blank">VicRoads — Towing Rules</a><br>
+      • State road authority guidance: MRWA, DPTI SA, NTMFR, DPAW TAS, ACTTO<br>
+      <span style="color:rgba(184,200,176,.5)">This tool is a guide only. Always verify with your state road authority and a qualified tow installer.</span>
     </div>
   </div>
 
@@ -600,29 +700,68 @@ function runCheck() {
       : 'Enter Vehicle Payload Capacity for a remaining payload figure.'
   });
 
-  var fails = checks.filter(function(c) { return c.s === 'fail'; });
-  var warns = checks.filter(function(c) { return c.s === 'warn'; });
+  var fails  = checks.filter(function(c) { return c.s === 'fail'; });
+  var warns  = checks.filter(function(c) { return c.s === 'warn'; });
   var passes = checks.filter(function(c) { return c.s === 'pass'; });
-  var vs = fails.length ? 'fail' : warns.length ? 'warn' : 'pass';
-  var vt = fails.length
-    ? fails.length + ' compliance issue' + (fails.length > 1 ? 's' : '') + ' — this combination may not be road legal.'
-    : warns.length
-    ? warns.length + ' advisory item' + (warns.length > 1 ? 's' : '') + ' — review before towing.'
-    : 'All checks passed — combination appears compliant. Verify with your dealer.';
-
-  var icon   = vs === 'pass' ? '✅' : vs === 'warn' ? '⚠️' : '❌';
+  var vs     = fails.length ? 'fail' : warns.length ? 'warn' : 'pass';
   var vLabel = [make, model].filter(Boolean).join(' ') || 'Your Vehicle';
 
-  document.getElementById('r-pass').textContent = passes.length;
-  document.getElementById('r-warn').textContent = warns.length;
-  document.getElementById('r-fail').textContent = fails.length;
-
+  // ── Overall verdict banner ──────────────────────────────────
+  var bannerIcon = vs === 'pass' ? '✅' : vs === 'warn' ? '⚠️' : '❌';
+  var bannerText = vs === 'pass' ? 'ALL CLEAR'
+    : vs === 'warn' ? 'ADVISORY — Review Before Towing'
+    : 'COMPLIANCE ISSUE — May Not Be Road Legal';
   document.getElementById('r-verdict').innerHTML =
-    '<div class="verdict ' + vs + '">' +
-      '<span style="font-size:1.3rem">' + icon + '</span>' +
-      '<span><strong>' + vLabel + '</strong> — ' + vt + '</span>' +
+    '<div class="verdict-banner ' + vs + '">' +
+      '<div class="vb-icon">' + bannerIcon + '</div>' +
+      '<div class="vb-right">' +
+        '<div class="vb-status ' + vs + '">' + bannerText + '</div>' +
+        '<div class="vb-vehicle">' + vLabel + ' · ' +
+          passes.length + ' pass · ' + warns.length + ' advisory · ' + fails.length + ' fail' +
+        '</div>' +
+      '</div>' +
     '</div>';
 
+  // ── Quick scan list ─────────────────────────────────────────
+  var qsIcons = {pass:'✔', warn:'⚠', fail:'✖'};
+  document.getElementById('r-quickscan').innerHTML = checks.map(function(c) {
+    return '<div class="qs-item ' + c.s + '">' +
+      '<span class="qs-icon">' + qsIcons[c.s] + '</span>' +
+      '<span>' + c.label + ' — ' + c.note + '</span>' +
+    '</div>';
+  }).join('');
+
+  // ── Payload bar ─────────────────────────────────────────────
+  var vpayloadFinal = n('c-vpayload');
+  var baseW = n('c-vactual') || n('c-vkerb');
+  if (vgvm && baseW) {
+    var usedMass    = vload;
+    var payloadCap  = vgvm - baseW;
+    var payRemain   = payloadCap - usedMass;
+    var pct         = Math.min(100, Math.max(0, (usedMass / payloadCap) * 100));
+    var fillColor   = pct > 95 ? '#D06040' : pct > 80 ? 'var(--sun2)' : '#7AAA68';
+    document.getElementById('pb-gvm').textContent    = vgvm.toLocaleString() + ' kg';
+    document.getElementById('pb-used').textContent   = Math.round(usedMass).toLocaleString() + ' kg';
+    document.getElementById('pb-remain').textContent = Math.round(payRemain).toLocaleString() + ' kg';
+    document.getElementById('pb-fill').style.width   = pct.toFixed(1) + '%';
+    document.getElementById('pb-fill').style.background = fillColor;
+    document.getElementById('pb-label').textContent  = pct.toFixed(0) + '% of estimated payload used (GVM − kerb weight)';
+    document.getElementById('r-payload-bar').style.display = 'block';
+  } else if (vpayloadFinal) {
+    var usedMass2   = vload;
+    var payRemain2  = vpayloadFinal - usedMass2;
+    var pct2        = Math.min(100, Math.max(0, (usedMass2 / vpayloadFinal) * 100));
+    var fillColor2  = pct2 > 95 ? '#D06040' : pct2 > 80 ? 'var(--sun2)' : '#7AAA68';
+    document.getElementById('pb-gvm').textContent    = '—';
+    document.getElementById('pb-used').textContent   = Math.round(usedMass2).toLocaleString() + ' kg';
+    document.getElementById('pb-remain').textContent = Math.round(payRemain2).toLocaleString() + ' kg';
+    document.getElementById('pb-fill').style.width   = pct2.toFixed(1) + '%';
+    document.getElementById('pb-fill').style.background = fillColor2;
+    document.getElementById('pb-label').textContent  = pct2.toFixed(0) + '% of payload capacity used';
+    document.getElementById('r-payload-bar').style.display = 'block';
+  }
+
+  // ── Detailed breakdown ──────────────────────────────────────
   document.getElementById('r-checks').innerHTML = checks.map(function(c) {
     return '<div class="ci ' + c.s + '">' +
       '<div class="ci-top">' +
@@ -633,9 +772,38 @@ function runCheck() {
     '</div>';
   }).join('');
 
+  // ── State-specific brake rules ──────────────────────────────
+  var state = document.getElementById('c-state').value;
+  var brakeRef2 = n('c-gtm') || (n('c-tactual') || n('c-atm'));
+  var stateRules = {
+    all: '• Brakes required on all trailers with GTM &gt; 750 kg<br>• Electric brakes typically required when ATM &gt; 2,000 kg<br>• Rules vary by state — always confirm with your local authority',
+    nsw: '• GTM &gt; 750 kg: brakes required (Transport for NSW)<br>• GTM &gt; 2,000 kg: electric brakes required<br>• Speed limited to 100 km/h when towing<br>• Ref: Transport for NSW Heavy Vehicle Guidelines',
+    vic: '• GTM &gt; 750 kg: brakes required (VicRoads)<br>• ATM &gt; 2,000 kg: electric brakes required<br>• Breakaway system required for trailers &gt; 2,000 kg ATM<br>• Ref: VicRoads Towing Rules',
+    qld: '• GTM &gt; 750 kg: brakes required (TMR QLD)<br>• ATM &gt; 2,000 kg: electric brakes required<br>• Breakaway system required &gt; 2,000 kg ATM<br>• Ref: TMR Queensland Towing Guidelines',
+    wa:  '• GTM &gt; 750 kg: brakes required (MRWA)<br>• ATM &gt; 2,000 kg: electric brakes required<br>• Speed limited to 100 km/h when towing<br>• Ref: Main Roads WA',
+    sa:  '• GTM &gt; 750 kg: brakes required (DPTI SA)<br>• ATM &gt; 2,000 kg: electric/hydraulic brakes required<br>• Ref: DPTI South Australia',
+    tas: '• GTM &gt; 750 kg: brakes required<br>• ATM &gt; 2,000 kg: electric brakes required<br>• Ref: Department of State Growth Tasmania',
+    act: '• GTM &gt; 750 kg: brakes required<br>• ATM &gt; 2,000 kg: electric brakes required<br>• Ref: Access Canberra (ACTTO)',
+    nt:  '• GTM &gt; 750 kg: brakes required<br>• ATM &gt; 2,000 kg: electric brakes required<br>• Open road speed limits apply — check current NT road rules<br>• Ref: NT Motor Vehicle Registry'
+  };
+  var stateLabel = {all:'All States',nsw:'NSW',vic:'VIC',qld:'QLD',wa:'WA',sa:'SA',tas:'TAS',act:'ACT',nt:'NT'};
+  document.getElementById('r-brake-rules').innerHTML =
+    '<br>' + (stateRules[state] || stateRules.all) +
+    '<br><span style="color:rgba(184,200,176,.5);font-size:.7rem">Showing: ' + (stateLabel[state] || 'All States') + ' — select your state above for specific rules</span>';
+
   var r = document.getElementById('results');
   r.style.display = 'block';
+  document.getElementById('r-detail').style.display = 'none';
+  document.querySelector('.detail-toggle').textContent = '▼ Show detailed breakdown';
   r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleDetail() {
+  var d   = document.getElementById('r-detail');
+  var btn = document.querySelector('.detail-toggle');
+  var open = d.style.display === 'block';
+  d.style.display  = open ? 'none' : 'block';
+  btn.textContent  = open ? '▼ Show detailed breakdown' : '▲ Hide detailed breakdown';
 }
 </script>
 </body>
