@@ -214,8 +214,12 @@ input::placeholder{color:rgba(184,200,176,.35)}
         <input type="number" id="c-vgcm" placeholder="e.g. 6700" min="0">
       </div>
       <div>
-        <label>Kerb Weight (kg) — unladen</label>
-        <input type="number" id="c-vkerb" placeholder="e.g. 2350" min="0">
+        <label>Kerb Weight (kg) — as per spec sheet</label>
+        <input type="number" id="c-vkerb" placeholder="e.g. 2350 — from manufacturer" min="0">
+      </div>
+      <div>
+        <label>Actual Vehicle Weight (kg) — weighbridge</label>
+        <input type="number" id="c-vactual" placeholder="e.g. 2414 — most accurate" min="0">
       </div>
     </div>
     <hr class="div">
@@ -315,7 +319,8 @@ function runCheck() {
   var vgvm    = n('c-vgvm');
   var vgcm    = n('c-vgcm');
   var vkerb   = n('c-vkerb');
-  var vpayload= n('c-vpayload');
+  var vactual = n('c-vactual');
+  var baseVehicleWeight = vactual || vkerb; // weighbridge preferred over spec sheet
   var vpax    = n('c-vpax');
   var vcargo  = n('c-vcargo');
   var vroof   = n('c-vroof');
@@ -358,14 +363,16 @@ function runCheck() {
   if (vgcm) {
     var trailerForGCM = tactual || atm;
     var gcmSource = tactual ? 'actual loaded weight' : 'ATM (enter Actual Loaded Weight above for accuracy)';
-    if (vkerb) {
-      var loadedVeh = vkerb + vload;
+    if (baseVehicleWeight) {
+      var weightSource = vactual ? 'weighbridge weight' : 'spec sheet kerb weight';
+      var loadedVeh = baseVehicleWeight + vload;
       var estGCM = loadedVeh + trailerForGCM;
       checks.push({
         label: 'GCM',
         val:   '~' + Math.round(estGCM).toLocaleString() + ' / ' + vgcm.toLocaleString() + ' kg',
         s:     estGCM <= vgcm ? 'pass' : 'fail',
-        note:  'Kerb ' + vkerb.toLocaleString() + ' kg + vehicle load ' + Math.round(vload).toLocaleString() + ' kg + trailer ' + trailerForGCM.toLocaleString() + ' kg (' + gcmSource + ')'
+        note:  weightSource.charAt(0).toUpperCase() + weightSource.slice(1) + ' ' + baseVehicleWeight.toLocaleString() + ' kg + vehicle load ' + Math.round(vload).toLocaleString() + ' kg + trailer ' + trailerForGCM.toLocaleString() + ' kg (' + gcmSource + ')'
+          + (vkerb && !vactual ? ' — enter Actual Vehicle Weight (weighbridge) for best accuracy.' : '')
       });
     } else if (vpayload) {
       var rem2 = vpayload - vload;
