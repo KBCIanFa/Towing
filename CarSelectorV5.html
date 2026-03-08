@@ -198,6 +198,7 @@ select.state-sel:focus{border-color:var(--accent)}
           <span class="chip" data-v="boat">Boat Trailer</span>
           <span class="chip" data-v="horse">Horse Float</span>
           <span class="chip" data-v="box">Box / Utility</span>
+          <span class="chip" data-v="5thwheel">5th Wheeler</span>
         </div>
       </div>
       <div>
@@ -258,6 +259,40 @@ select.state-sel:focus{border-color:var(--accent)}
         <input type="number" id="c-tactual" placeholder="e.g. 2600 — today's load" min="0">
       </div>
     </div>
+
+    <!-- 5TH WHEELER SPECIFIC FIELDS -->
+    <div id="fields-5thwheel" style="display:none">
+      <hr class="div">
+      <div style="font-size:.72rem;font-weight:800;color:var(--smoke);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem">
+        🔩 5th Wheeler / Gooseneck Specs
+      </div>
+      <div class="grid3">
+        <div>
+          <label>Pin Weight (kg)</label>
+          <input type="number" id="c-pinweight" placeholder="e.g. 850" min="0" oninput="calc5thWheel()">
+        </div>
+        <div>
+          <label>Max Pin Weight Rating (kg)</label>
+          <input type="number" id="c-pinrating" placeholder="e.g. 1200 — hitch plate" min="0">
+        </div>
+        <div>
+          <label>5th Wheel Hitch Rating (kg)</label>
+          <input type="number" id="c-hitchrating" placeholder="e.g. 4500 — hitch label" min="0">
+        </div>
+        <div>
+          <label>Estimated Pin Weight (%)</label>
+          <input type="number" id="c-pinpct" placeholder="Auto — aim 15–25%" min="0" max="100">
+        </div>
+        <div>
+          <label>Overhang — axle to kingpin (mm)</label>
+          <input type="number" id="c-5woverhang" placeholder="e.g. 600" min="0">
+        </div>
+      </div>
+      <div style="font-size:.72rem;color:var(--smoke);margin-top:.5rem;line-height:1.6;background:rgba(255,255,255,.03);border-radius:6px;padding:.5rem .75rem;border:1px solid rgba(200,114,10,.12)">
+        💡 <strong style="color:var(--sand)">5th Wheeler notes:</strong> Pin weight (kingpin load) replaces towball mass. Ideal pin weight is 15–25% of trailer GVM. Pin weight loads the rear axle of the tow vehicle — enter it in vehicle load fields above too.
+      </div>
+    </div>
+
   </div>
 
   <!-- VEHICLE CARD -->
@@ -555,12 +590,41 @@ function calcAxles() {
   document.getElementById('axle-result').style.display = 'block';
 }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  function calc5thWheel() {
+  var pinWeight = n('c-pinweight');
+  var atm       = n('c-atm');
+  var base      = n('c-tactual') || atm;
+  if (pinWeight && base) {
+    var pct = (pinWeight / base) * 100;
+    document.getElementById('c-pinpct').value = pct.toFixed(1);
+  }
+}
+
+function toggle5thWheelFields() {
+  var type    = document.querySelector('#chips-type .chip.on');
+  var is5th   = type && type.dataset.v === '5thwheel';
+  var fields  = document.getElementById('fields-5thwheel');
+  var ballLbl = document.querySelector('label[for-id="c-ball"]');
+  fields.style.display = is5th ? 'block' : 'none';
+  // Swap ball weight label context
+  var ballInput = document.getElementById('c-ball');
+  if (ballInput) {
+    var lbl = ballInput.previousElementSibling;
+    if (lbl && lbl.tagName === 'LABEL') {
+      lbl.textContent = is5th ? 'Pin Weight at ATM (kg)' : 'Ball Weight at ATM (kg)';
+    }
+    ballInput.placeholder = is5th ? 'e.g. 850 — kingpin load' : 'e.g. 280';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.chip-row').forEach(function(row) {
     row.querySelectorAll('.chip').forEach(function(chip) {
       chip.addEventListener('click', function() {
         row.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('on'); });
         chip.classList.add('on');
+        // Show/hide 5th wheeler fields when type chip changes
+        if (row.id === 'chips-type') toggle5thWheelFields();
       });
     });
   });
@@ -589,6 +653,13 @@ function resetAll() {
   document.getElementById('axle-result').style.display = 'none';
   document.getElementById('adv-body').style.display = 'none';
   document.getElementById('adv-arrow').style.transform = 'rotate(0deg)';
+  document.getElementById('fields-5thwheel').style.display = 'none';
+  // Reset ball label back to default
+  var ballInput = document.getElementById('c-ball');
+  if (ballInput && ballInput.previousElementSibling) {
+    ballInput.previousElementSibling.textContent = 'Ball Weight at ATM (kg)';
+    ballInput.placeholder = 'e.g. 280';
+  }
 }
 
 function runCheck() {
@@ -619,6 +690,13 @@ function runCheck() {
 
   var checks = [];
 
+  // Detect 5th wheeler
+  var trailerTypeChip = document.querySelector('#chips-type .chip.on');
+  var is5thWheel = trailerTypeChip && trailerTypeChip.dataset.v === '5thwheel';
+  var pinWeight  = is5thWheel ? n('c-pinweight') : 0;
+  var pinRating  = is5thWheel ? n('c-pinrating')  : 0;
+  var hitchRating= is5thWheel ? n('c-hitchrating'): 0;
+
   // 1. Tow capacity — always vs ATM (legal max rating)
   checks.push({
     label: 'Tow Capacity',
@@ -629,18 +707,45 @@ function runCheck() {
       : 'ATM exceeds tow rating by ' + (atm - vtow).toLocaleString() + ' kg ❌'
   });
 
-  // 2. Towball mass — % based on actual loaded weight if available
+  // 1b. 5th wheel hitch rating check
+  if (is5thWheel && hitchRating) {
+    checks.push({
+      label: '5th Wheel Hitch Rating',
+      val:   atm.toLocaleString() + ' / ' + hitchRating.toLocaleString() + ' kg',
+      s:     atm <= hitchRating ? 'pass' : 'fail',
+      note:  atm <= hitchRating
+        ? 'ATM within hitch plate rating ✓'
+        : 'ATM exceeds hitch rating by ' + (atm - hitchRating).toLocaleString() + ' kg — check hitch specifications ❌'
+    });
+  }
+
+  // 2. Towball / Pin weight
   var ballBase = tactual || atm;
   var ballPct  = ballBase ? (ball / ballBase) * 100 : 0;
-  var ballS    = (vball && ball > vball) ? 'fail' : (ballPct > 12 || (ballPct < 8 && ball > 0)) ? 'warn' : 'pass';
-  checks.push({
-    label: 'Towball Mass',
-    val:   ball + ' / ' + (vball || '?') + ' kg max',
-    s:     ballS,
-    note:  (vball && ball > vball)
-      ? 'Exceeds max towball mass ❌'
-      : ballPct.toFixed(1) + '% of ' + (tactual ? 'actual loaded weight' : 'ATM') + ' (ideal range 8–12%)'
-  });
+  if (is5thWheel) {
+    // Pin weight checks — replaces towball
+    var pinPct  = ballBase ? (ball / ballBase) * 100 : 0;
+    var pinS    = (pinRating && ball > pinRating) ? 'fail'
+                : (pinPct < 15 || pinPct > 25) ? 'warn' : 'pass';
+    checks.push({
+      label: 'Pin Weight',
+      val:   ball.toLocaleString() + (pinRating ? ' / ' + pinRating.toLocaleString() + ' kg max' : ' kg'),
+      s:     pinS,
+      note:  (pinRating && ball > pinRating)
+        ? 'Exceeds max pin weight rating ❌'
+        : pinPct.toFixed(1) + '% of ' + (tactual ? 'actual loaded weight' : 'ATM') + ' — ideal range 15–25% for 5th wheelers'
+    });
+  } else {
+    var ballS = (vball && ball > vball) ? 'fail' : (ballPct > 12 || (ballPct < 8 && ball > 0)) ? 'warn' : 'pass';
+    checks.push({
+      label: 'Towball Mass',
+      val:   ball + ' / ' + (vball || '?') + ' kg max',
+      s:     ballS,
+      note:  (vball && ball > vball)
+        ? 'Exceeds max towball mass ❌'
+        : ballPct.toFixed(1) + '% of ' + (tactual ? 'actual loaded weight' : 'ATM') + ' (ideal range 8–12%)'
+    });
+  }
 
   // 3. GCM — use actual trailer weight, not ATM
   if (vgcm) {
@@ -690,13 +795,15 @@ function runCheck() {
       : 'GTM ≤ 750 kg — brakes not mandatory'
   });
 
-  // 5. Ball weight % — already calculated above
-  checks.push({
-    label: 'Ball Weight %',
-    val:   ballPct.toFixed(1) + '%',
-    s:     (ballPct >= 8 && ballPct <= 12) ? 'pass' : 'warn',
-    note:  'Ideal 8–12% of ' + (tactual ? 'actual loaded weight' : 'ATM') + ' for stable towing (NTC guideline). Outside range increases sway risk.'
-  });
+  // 5. Ball weight % / Pin weight % — skip for 5th wheeler (already shown in check 2)
+  if (!is5thWheel) {
+    checks.push({
+      label: 'Ball Weight %',
+      val:   ballPct.toFixed(1) + '%',
+      s:     (ballPct >= 8 && ballPct <= 12) ? 'pass' : 'warn',
+      note:  'Ideal 8–12% of ' + (tactual ? 'actual loaded weight' : 'ATM') + ' for stable towing (NTC guideline). Outside range increases sway risk.'
+    });
+  }
 
   // 6. Trailer / GVM ratio — use actual loaded weight if available
   var ratio = (trailerMass && vgvm) ? trailerMass / vgvm : 0;
